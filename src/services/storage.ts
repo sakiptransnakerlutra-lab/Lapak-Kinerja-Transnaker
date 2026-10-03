@@ -5,6 +5,15 @@ import {
   LKECriteriaItem,
   LKEEvaluationComponent,
   User,
+  KKEPDItem,
+  KKEJuknisItem,
+  KKEJuknisData,
+  KKEPenjelasanItem,
+  KKEPenjelasanData,
+  KKE1b4Item,
+  KKE1b5Item,
+  KKE2b1Item,
+  KKE2c1Item,
 } from '../types/sakip';
 import {
   INITIAL_CAPAIAN_KINERJA,
@@ -12,6 +21,13 @@ import {
   INITIAL_LKE_COMPONENTS,
   INITIAL_LKE_CRITERIA,
   INITIAL_USERS,
+  INITIAL_KKE_PD,
+  INITIAL_KKE_JUKNIS,
+  INITIAL_KKE_PENJELASAN,
+  INITIAL_KKE_1B4,
+  INITIAL_KKE_1B5,
+  INITIAL_KKE_2B1,
+  INITIAL_KKE_2C1,
 } from '../data/initialData';
 
 const STORAGE_KEYS = {
@@ -22,6 +38,13 @@ const STORAGE_KEYS = {
   LKE_CRITERIA: 'lapak_kinerja_lke_crit_v2',
   DOKUMEN: 'lapak_kinerja_dokumen_v2',
   CUSTOM_SHEETS: 'lapak_kinerja_custom_sheets_v2',
+  KKE_PD: 'lapak_kinerja_kke_pd_v2',
+  KKE_JUKNIS: 'lapak_kinerja_kke_juknis_v2',
+  KKE_PENJELASAN: 'lapak_kinerja_kke_penjelasan_v2',
+  KKE_1B4: 'lapak_kinerja_kke_1b4_v2',
+  KKE_1B5: 'lapak_kinerja_kke_1b5_v2',
+  KKE_2B1: 'lapak_kinerja_kke_2b1_v2',
+  KKE_2C1: 'lapak_kinerja_kke_2c1_v2',
 };
 
 export interface CustomUploadedSheet {
@@ -279,5 +302,131 @@ export const StorageService = {
     localStorage.removeItem(STORAGE_KEYS.LKE_CRITERIA);
     localStorage.removeItem(STORAGE_KEYS.DOKUMEN);
     localStorage.removeItem(STORAGE_KEYS.CUSTOM_SHEETS);
+    localStorage.removeItem(STORAGE_KEYS.KKE_PD);
+    localStorage.removeItem(STORAGE_KEYS.KKE_JUKNIS);
+    localStorage.removeItem(STORAGE_KEYS.KKE_PENJELASAN);
+    localStorage.removeItem(STORAGE_KEYS.KKE_1B4);
+    localStorage.removeItem(STORAGE_KEYS.KKE_1B5);
+    localStorage.removeItem(STORAGE_KEYS.KKE_2B1);
+    localStorage.removeItem(STORAGE_KEYS.KKE_2C1);
+  },
+
+  // KKE PD (Kertas Kerja Evaluasi Perangkat Daerah)
+  getKKEPD(): KKEPDItem[] {
+    const data = safeStorage.getItem(STORAGE_KEYS.KKE_PD);
+    if (!data) {
+      safeStorage.setItem(STORAGE_KEYS.KKE_PD, JSON.stringify(INITIAL_KKE_PD));
+      return INITIAL_KKE_PD;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_KKE_PD;
+    }
+  },
+  saveKKEPD(items: KKEPDItem[]) {
+    safeStorage.setItem(STORAGE_KEYS.KKE_PD, JSON.stringify(items));
+  },
+
+  // KKE Juknis
+  getKKEJuknis(): KKEJuknisData {
+    const data = safeStorage.getItem(STORAGE_KEYS.KKE_JUKNIS);
+    if (!data) {
+      safeStorage.setItem(STORAGE_KEYS.KKE_JUKNIS, JSON.stringify(INITIAL_KKE_JUKNIS));
+      return INITIAL_KKE_JUKNIS;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_KKE_JUKNIS;
+    }
+  },
+  saveKKEJuknis(data: KKEJuknisData) {
+    safeStorage.setItem(STORAGE_KEYS.KKE_JUKNIS, JSON.stringify(data));
+  },
+
+  // KKE Penjelasan
+  getKKEPenjelasan(): KKEPenjelasanData {
+    const data = safeStorage.getItem(STORAGE_KEYS.KKE_PENJELASAN);
+    if (!data) {
+      safeStorage.setItem(STORAGE_KEYS.KKE_PENJELASAN, JSON.stringify(INITIAL_KKE_PENJELASAN));
+      return INITIAL_KKE_PENJELASAN;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_KKE_PENJELASAN;
+    }
+  },
+  saveKKEPenjelasan(data: KKEPenjelasanData) {
+    safeStorage.setItem(STORAGE_KEYS.KKE_PENJELASAN, JSON.stringify(data));
+  },
+
+  // KKE 1.b.4 (Cascading)
+  getKKE1b4(): KKE1b4Item[] {
+    const data = safeStorage.getItem(STORAGE_KEYS.KKE_1B4);
+    if (!data) {
+      safeStorage.setItem(STORAGE_KEYS.KKE_1B4, JSON.stringify(INITIAL_KKE_1B4));
+      return INITIAL_KKE_1B4;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_KKE_1B4;
+    }
+  },
+  saveKKE1b4(items: KKE1b4Item[]) {
+    safeStorage.setItem(STORAGE_KEYS.KKE_1B4, JSON.stringify(items));
+  },
+
+  // KKE 1.b.5 (Matriks Penyelarasan)
+  getKKE1b5(): KKE1b5Item[] {
+    const data = safeStorage.getItem(STORAGE_KEYS.KKE_1B5);
+    if (!data) {
+      safeStorage.setItem(STORAGE_KEYS.KKE_1B5, JSON.stringify(INITIAL_KKE_1B5));
+      return INITIAL_KKE_1B5;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_KKE_1B5;
+    }
+  },
+  saveKKE1b5(items: KKE1b5Item[]) {
+    safeStorage.setItem(STORAGE_KEYS.KKE_1B5, JSON.stringify(items));
+  },
+
+  // KKE 2.b.1 (Kuesioner Pengukuran Kinerja)
+  getKKE2b1(): KKE2b1Item[] {
+    const data = safeStorage.getItem(STORAGE_KEYS.KKE_2B1);
+    if (!data) {
+      safeStorage.setItem(STORAGE_KEYS.KKE_2B1, JSON.stringify(INITIAL_KKE_2B1));
+      return INITIAL_KKE_2B1;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_KKE_2B1;
+    }
+  },
+  saveKKE2b1(items: KKE2b1Item[]) {
+    safeStorage.setItem(STORAGE_KEYS.KKE_2B1, JSON.stringify(items));
+  },
+
+  // KKE 2.c.1 (Kuesioner Pemanfaatan Data Kinerja)
+  getKKE2c1(): KKE2c1Item[] {
+    const data = safeStorage.getItem(STORAGE_KEYS.KKE_2C1);
+    if (!data) {
+      safeStorage.setItem(STORAGE_KEYS.KKE_2C1, JSON.stringify(INITIAL_KKE_2C1));
+      return INITIAL_KKE_2C1;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_KKE_2C1;
+    }
+  },
+  saveKKE2c1(items: KKE2c1Item[]) {
+    safeStorage.setItem(STORAGE_KEYS.KKE_2C1, JSON.stringify(items));
   },
 };

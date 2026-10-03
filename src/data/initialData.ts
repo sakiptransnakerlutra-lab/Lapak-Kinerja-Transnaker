@@ -1,4 +1,17 @@
-import { CapaianKinerjaItem, DokumenSAKIPItem, LKEEvaluationComponent, LKECriteriaItem, User } from '../types/sakip';
+import {
+  CapaianKinerjaItem,
+  DokumenSAKIPItem,
+  LKEEvaluationComponent,
+  LKECriteriaItem,
+  User,
+  KKEPDItem,
+  KKEJuknisItem,
+  KKEPenjelasanItem,
+  KKE1b4Item,
+  KKE1b5Item,
+  KKE2b1Item,
+  KKE2c1Item,
+} from '../types/sakip';
 
 export const INITIAL_USERS: User[] = [
   {
@@ -1379,5 +1392,276 @@ export const INITIAL_DOKUMEN_SAKIP: DokumenSAKIPItem[] = [
     deskripsi: 'Prosedur standar operasional alur penyampaian bukti dukung dari bidang teknis ke tim SAKIP dinas.',
     triwulan: 'Tahunan',
     downloadsCount: 63,
+  },
+];
+
+// Initial Data for KKE PD
+export const INITIAL_KKE_PD: KKEPDItem[] = [
+  {
+    id: 'kke-pd-1',
+    sub: '1.a Dokumen',
+    q: 'Terdapat Peraturan Daerah Nomor 03 Tahun 2014 Tentang Sistem Perencanaan Pembangunan Daerah',
+    ans: 'Ya',
+    link: 'https://drive.google.com/file/d/1DkAlyAqjLPI4fNEHUjMi2hrrQ6xBSPZ6/view?usp=sharing',
+    catatan: 'Ditetapkan dalam Lembaran Daerah',
+  },
+  {
+    id: 'kke-pd-2',
+    sub: '1.a Dokumen',
+    q: 'Terdapat Renstra Distransnaker 2021-2026',
+    ans: 'Ya',
+    link: 'https://drive.google.com/file/d/1cKgiu3pPi5FMdL7RiIhxumZPWLrJ_4Uq/view?usp=sharing',
+    catatan: 'Revisi Renstra periode 2021-2026',
+  },
+  {
+    id: 'kke-pd-3',
+    sub: '1.a Dokumen',
+    q: 'Terdapat Renja Distransnaker 2024 / 2026',
+    ans: 'Ya',
+    link: 'https://drive.google.com/file/d/1EF8AkJp6qWwDbRS2lg-IBP1b80ul8n71/view?usp=sharing',
+    catatan: 'Dokumen Renja tahun berkenaan',
+  },
+  {
+    id: 'kke-pd-4',
+    sub: '1.b Cascading',
+    q: 'Sebagian dokumen 1a telah diformalkan, IKU telah diformalkan dan PK telah ditandatangani',
+    ans: 'Ya',
+    link: 'https://drive.google.com/file/d/1oMDZwCCK0leuDmOlIx0XDtIaZcS56vIs/view?usp=sharing',
+    catatan: 'Perjanjian Kinerja berjenjang eselon II sampai staf',
+  },
+  {
+    id: 'kke-pd-5',
+    sub: '2.a Manual IKU',
+    q: 'Formulasi pengukuran indikator sesuai Permendagri No. 18 Tahun 2020',
+    ans: 'Ya',
+    link: 'https://peraturan.bpk.go.id/Details/138501/permendagri-no-18-tahun-2020',
+    catatan: 'Lampiran IKU mencakup formula rumus',
+  },
+  {
+    id: 'kke-pd-6',
+    sub: '2.a SOP',
+    q: 'SOP pengumpulan dan pengukuran kinerja',
+    ans: 'Ya',
+    link: 'https://drive.google.com/file/d/1xFEe2WdG_7p_sg3TW_XBsS7aVqhcTIOF/view?usp=sharing',
+    catatan: 'SOP monev berkala triwulanan',
+  },
+  {
+    id: 'kke-pd-7',
+    sub: '3.a LAKIP',
+    q: 'Dokumen LAKIP telah disusun dan dipublikasikan tepat waktu',
+    ans: 'Ya',
+    link: 'https://drive.google.com/file/d/1AfWnUvMLMY9Y9cEnI06fn-H3s3oS-Jim/view?usp=sharing',
+    catatan: 'Tersampaikan ke Inspektorat dan Bagian Organisasi',
+  },
+  {
+    id: 'kke-pd-8',
+    sub: '4.c Tindak Lanjut',
+    q: 'Tindak Lanjut rekomendasi LHE SAKIP Inspektorat',
+    ans: 'Ya',
+    link: 'https://drive.google.com/file/d/1xj2m2FYE9-Aw5VWDK2SJ10usr2BiLi5B/view?usp=sharing',
+    catatan: 'Matriks tindak lanjut perbaikan',
+  },
+];
+
+// Initial Data for KKE PD JUKNIS
+export const INITIAL_KKE_JUKNIS = {
+  tujuan:
+    'Memberikan panduan operasional bagi tim SAKIP dan operator di masing-masing bidang pada Dinas Transmigrasi dan Tenaga Kerja dalam mempersiapkan, memverifikasi, dan mengunggah Link Evidence evaluasi akuntabilitas kinerja instansi.',
+  items: [
+    {
+      id: 'juknis-1',
+      nomor: 1,
+      judul: 'Verifikasi Ketersediaan Dokumen',
+      uraian:
+        'Pastikan seluruh dokumen perencanaan (Renstra, IKU, RKT, PK) telah ditandatangani secara sah dan memiliki nomor surat resmi.',
+    },
+    {
+      id: 'juknis-2',
+      nomor: 2,
+      judul: 'Kesesuaian Data Triwulanan',
+      uraian:
+        'Angka realisasi pada tabel capaian kinerja harus bersumber dari dokumen primer seperti DPA, laporan RFK bidang, atau publikasi resmi BPS / BPJS.',
+    },
+    {
+      id: 'juknis-3',
+      nomor: 3,
+      judul: 'Penyediaan Link Evidence',
+      uraian:
+        'Setiap indikator wajib dilengkapi Link Evidence aktif berupa link Google Drive atau publikasi resmi peraturan.',
+    },
+    {
+      id: 'juknis-4',
+      nomor: 4,
+      judul: 'Pemberian Skor & Kriteria Mutu',
+      uraian:
+        'Skor pemenuhan mengacu pada pedoman PermenPAN-RB No. 88 Tahun 2021 dengan rentang penilaian 0% s/d 100%.',
+    },
+  ],
+};
+
+// Initial Data for KKE PD PENJELASAN
+export const INITIAL_KKE_PENJELASAN = {
+  pengantar:
+    'Penjelasan kriteria penilaian dimaksudkan untuk memastikan kesamaan persepsi antara evaluator (Inspektorat Kabupaten Luwu Utara) dan tim penyusun SAKIP Dinas Transnaker.',
+  items: [
+    {
+      id: 'penj-1',
+      judul: 'Kualitas Renstra & IKU',
+      deskripsi:
+        'IKU harus berorientasi pada hasil (outcome) bukan sekadar output kegiatan. Sebagai contoh, persentase penyerapan tenaga kerja formal dan rasio kemandirian transmigran.',
+      kategori: 'Perencanaan',
+    },
+    {
+      id: 'penj-2',
+      judul: 'Cascading Kinerja Berjenjang',
+      deskripsi:
+        'Pohon kinerja harus menggambarkan hubungan sebab-akibat (cause and effect) yang logis dari sasaran strategis kepala dinas hingga indikator kinerja individu pelaksana.',
+      kategori: 'Pohon Kinerja',
+    },
+    {
+      id: 'penj-3',
+      judul: 'Keandalan Pengukuran Triwulan',
+      deskripsi:
+        'Setiap data capaian triwulanan wajib didukung lembar verifikasi bukti otentik seperti daftar hadir pelatihan, polis kepesertaan jaminan sosial, dan SK penetapan kawasan.',
+      kategori: 'Pengukuran',
+    },
+    {
+      id: 'penj-4',
+      judul: 'Pemanfaatan Hasil Evaluasi',
+      deskripsi:
+        'Hasil pengukuran kinerja harus secara nyata digunakan sebagai bahan perbaikan program tahun berikutnya (feedback loop) dan dasar alokasi anggaran.',
+      kategori: 'Pemanfaatan',
+    },
+  ],
+};
+
+// Initial Data for KKE 1.b.4 (Cascading)
+export const INITIAL_KKE_1B4: KKE1b4Item[] = [
+  {
+    id: 'casc-1',
+    tujuanKode: 'T1',
+    tujuanNama: 'Meningkatkan Kualitas Pembangunan Manusia',
+    tujuanCatatan: 'Selaras Renstra, Renja, Pohon Kinerja & Cascading',
+    indikatorTujuan: 'Indeks Pembangunan Manusia (IPM)',
+    sasaranStrategis: 'Meningkatnya pemerataan pembangunan sektor ekonomi dan Penanggulangan Kemiskinan',
+    sasaranCatatan: 'Indikator Makro: Pertumbuhan Ekonomi & Tingkat Pengangguran Terbuka (TPT)',
+    programList: [
+      {
+        id: 'p-1',
+        kode: 'p1',
+        nama: 'Program Pelatihan Kerja & Produktivitas',
+        indikator: 'Tingkat Produktivitas Tenaga Kerja & Persentase Tenaga Kerja Bersertifikat Kompetensi',
+      },
+      {
+        id: 'p-2',
+        kode: 'p2',
+        nama: 'Program Penempatan Tenaga Kerja',
+        indikator: 'Persentase Tenaga Kerja yang Ditempatkan di Dalam & Luar Negeri',
+      },
+      {
+        id: 'p-3',
+        kode: 'p3',
+        nama: 'Program Hubungan Industrial',
+        indikator: 'Persentase Perusahaan Menerapkan Tata Kelola Layak (PP/PKB, BPJS Ketenagakerjaan)',
+      },
+      {
+        id: 'p-4',
+        kode: 'p4',
+        nama: 'Program Perencanaan & Pengembangan Kawasan Transmigrasi',
+        indikator: 'Persentase jumlah kawasan transmigrasi difasilitasi penetapannya & Kemandirian Kawasan',
+      },
+    ],
+  },
+];
+
+// Initial Data for KKE 1.b.5 (Matriks Penyelarasan)
+export const INITIAL_KKE_1B5: KKE1b5Item[] = [
+  {
+    id: 'mat-1',
+    sasaranStrategis: 'Meningkatnya Kesiapan Tenaga Kerja',
+    indikatorKinerjaUtama: 'Persentase naker terlatih bersertifikasi',
+    target: '59.06%',
+    programKegiatan: 'Program Pelatihan Kerja & Produktivitas',
+    unitPelaksana: 'UPTD BLK',
+  },
+  {
+    id: 'mat-2',
+    sasaranStrategis: 'Perlindungan Pekerja Rentan',
+    indikatorKinerjaUtama: 'Persentase pekerja bukan penerima upah terproteksi',
+    target: '40.00%',
+    programKegiatan: 'Program Hubungan Industrial',
+    unitPelaksana: 'Bidang Hubungan Industrial',
+  },
+  {
+    id: 'mat-3',
+    sasaranStrategis: 'Kemandirian Warga Transmigrasi',
+    indikatorKinerjaUtama: 'Persentase transmigran dibina dan diberdayakan',
+    target: '11.49%',
+    programKegiatan: 'Program Pengembangan Kawasan Transmigrasi',
+    unitPelaksana: 'Bidang Pengembangan Kawasan Tranmigrasi',
+  },
+  {
+    id: 'mat-4',
+    sasaranStrategis: 'Perluasan Kesempatan Kerja',
+    indikatorKinerjaUtama: 'Tingkat Penempatan Tenaga Kerja Terdaftar',
+    target: '48.12%',
+    programKegiatan: 'Program Penempatan Tenaga Kerja',
+    unitPelaksana: 'Bidang Pembinaan & Penempatan Tenaga Kerja',
+  },
+];
+
+// Initial Data for KKE 2.b.1 Kues (Pengukuran Kinerja Berkala)
+export const INITIAL_KKE_2B1: KKE2b1Item[] = [
+  {
+    id: 'kues-2b1-1',
+    q: 'Apakah dinas menyusun jadwal berkala pengumpulan data capaian kinerja dari setiap bidang?',
+    status: 'Ya, setiap akhir triwulan melalui aplikasi LAPAK KINERJA',
+    skor: 'A (Sangat Baik)',
+  },
+  {
+    id: 'kues-2b1-2',
+    q: 'Apakah data realisasi capaian diverifikasi dengan bukti dukung yang valid sebelum dilaporkan?',
+    status: 'Ya, diverifikasi oleh Kasubag Perencanaan dan disetujui Kepala Dinas',
+    skor: 'A (Sangat Baik)',
+  },
+  {
+    id: 'kues-2b1-3',
+    q: 'Apakah terdapat manual indikator kinerja yang menjelaskan definisi dan tata cara perhitungan?',
+    status: 'Tersedia lengkap pada lampiran Keputusan Kadis tentang IKU',
+    skor: 'A (Sangat Baik)',
+  },
+  {
+    id: 'kues-2b1-4',
+    q: 'Apakah dinas memiliki sistem repositori digital terintegrasi untuk penyimpanan eviden kinerja?',
+    status: 'Ya, tersimpan secara terpusat pada menu Dokumen SAKIP LAPAK KINERJA',
+    skor: 'A (Sangat Baik)',
+  },
+];
+
+// Initial Data for KKE 2.c.1 Kues (Pemanfaatan Data Kinerja)
+export const INITIAL_KKE_2C1: KKE2c1Item[] = [
+  {
+    id: 'kues-2c1-1',
+    q: 'Apakah hasil capaian kinerja digunakan sebagai bahan penyusunan dokumen perencanaan tahun berikutnya?',
+    status: 'Ya, menjadi baseline perumusan target Renja 2027',
+    skor: 'A (Sangat Baik)',
+  },
+  {
+    id: 'kues-2c1-2',
+    q: 'Apakah pimpinan unit kerja memberikan arahan perbaikan terhadap indikator yang belum mencapai target?',
+    status: 'Ya, tertuang dalam notulen rapat monev pimpinan triwulan 2 dan 3',
+    skor: 'A (Sangat Baik)',
+  },
+  {
+    id: 'kues-2c1-3',
+    q: 'Apakah data kinerja dipublikasikan kepada masyarakat untuk akuntabilitas publik?',
+    status: 'Ya, melalui website resmi www.luwuutarakab.go.id dan papan pengumuman kantor',
+    skor: 'A (Sangat Baik)',
+  },
+  {
+    id: 'kues-2c1-4',
+    q: 'Apakah hasil evaluasi SAKIP dijadikan dasar pemberian reward atau evaluasi internal bagi unit kerja?',
+    status: 'Ya, terintegrasi dengan penilaian kinerja pegawai (SKP) pada masing-masing bidang',
+    skor: 'BB (Baik)',
   },
 ];

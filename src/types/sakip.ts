@@ -100,3 +100,76 @@ export type LKETab =
   | 'kke-2b1'
   | 'kke-2c1'
   | 'uploaded-sheet';
+
+// Types for all KKE Submenus
+export interface KKEPDItem {
+  id: string;
+  sub: string;
+  q: string;
+  ans: string;
+  link: string;
+  catatan?: string;
+}
+
+export interface KKEJuknisItem {
+  id: string;
+  nomor: number;
+  judul: string;
+  uraian: string;
+}
+
+export interface KKEJuknisData {
+  tujuan: string;
+  items: KKEJuknisItem[];
+}
+
+export interface KKEPenjelasanItem {
+  id: string;
+  judul: string;
+  deskripsi: string;
+  kategori: string;
+}
+
+export interface KKEPenjelasanData {
+  pengantar: string;
+  items: KKEPenjelasanItem[];
+}
+
+export interface KKE1b4Item {
+  id: string;
+  tujuanKode: string;
+  tujuanNama: string;
+  tujuanCatatan: string;
+  indikatorTujuan: string;
+  sasaranStrategis: string;
+  sasaranCatatan: string;
+  programList: {
+    id: string;
+    kode: string;
+    nama: string;
+    indikator: string;
+  }[];
+}
+
+export interface KKE1b5Item {
+  id: string;
+  sasaranStrategis: string;
+  indikatorKinerjaUtama: string;
+  target: string;
+  programKegiatan: string;
+  unitPelaksana: string;
+}
+
+export interface KKE2b1Item {
+  id: string;
+  q: string;
+  status: string;
+  skor: string;
+}
+
+export interface KKE2c1Item {
+  id: string;
+  q: string;
+  status: string;
+  skor?: string;
+}

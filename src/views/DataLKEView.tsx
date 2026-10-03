@@ -28,8 +28,26 @@ import {
   LKECriteriaItem,
   LKETab,
   User,
+  KKEPDItem,
+  KKEJuknisItem,
+  KKEJuknisData,
+  KKEPenjelasanItem,
+  KKEPenjelasanData,
+  KKE1b4Item,
+  KKE1b5Item,
+  KKE2b1Item,
+  KKE2c1Item,
 } from '../types/sakip';
 import { StorageService, CustomUploadedSheet } from '../services/storage';
+import {
+  INITIAL_KKE_PD,
+  INITIAL_KKE_JUKNIS,
+  INITIAL_KKE_PENJELASAN,
+  INITIAL_KKE_1B4,
+  INITIAL_KKE_1B5,
+  INITIAL_KKE_2B1,
+  INITIAL_KKE_2C1,
+} from '../data/initialData';
 
 interface DataLKEViewProps {
   activeSubTab: LKETab;
@@ -96,6 +114,558 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
     capaianPersen: 83.0,
     deskripsi: '',
   });
+
+  // ==================== KKE STATES & HANDLERS ====================
+  // 1. KKE PD
+  const [kkePDList, setKkePDList] = useState<KKEPDItem[]>(() => StorageService.getKKEPD());
+  const [isKKEPDModalOpen, setIsKKEPDModalOpen] = useState(false);
+  const [editingKKEPD, setEditingKKEPD] = useState<KKEPDItem | null>(null);
+  const [kkePDFormData, setKkePDFormData] = useState<Partial<KKEPDItem>>({
+    sub: '1.a Dokumen',
+    q: '',
+    ans: 'Ya',
+    link: '',
+    catatan: '',
+  });
+
+  const handleOpenAddKKEPD = () => {
+    setEditingKKEPD(null);
+    setKkePDFormData({
+      sub: '1.a Dokumen',
+      q: '',
+      ans: 'Ya',
+      link: '',
+      catatan: '',
+    });
+    setIsKKEPDModalOpen(true);
+  };
+
+  const handleOpenEditKKEPD = (item: KKEPDItem) => {
+    setEditingKKEPD(item);
+    setKkePDFormData({ ...item });
+    setIsKKEPDModalOpen(true);
+  };
+
+  const handleSaveKKEPDForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    let updated: KKEPDItem[];
+    if (editingKKEPD) {
+      updated = kkePDList.map((item) =>
+        item.id === editingKKEPD.id ? ({ ...item, ...kkePDFormData } as KKEPDItem) : item
+      );
+    } else {
+      const newItem: KKEPDItem = {
+        id: 'kke-pd-' + Date.now(),
+        sub: kkePDFormData.sub || '1.a Dokumen',
+        q: kkePDFormData.q || '',
+        ans: kkePDFormData.ans || 'Ya',
+        link: kkePDFormData.link || '',
+        catatan: kkePDFormData.catatan || '',
+      };
+      updated = [...kkePDList, newItem];
+    }
+    setKkePDList(updated);
+    StorageService.saveKKEPD(updated);
+    setIsKKEPDModalOpen(false);
+  };
+
+  const handleDeleteKKEPD = (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus butir instrumen KKE PD ini?')) return;
+    const updated = kkePDList.filter((item) => item.id !== id);
+    setKkePDList(updated);
+    StorageService.saveKKEPD(updated);
+  };
+
+  const handleResetKKEPD = () => {
+    if (!window.confirm('Kembalikan seluruh data KKE PD ke format standar awal?')) return;
+    setKkePDList(INITIAL_KKE_PD);
+    StorageService.saveKKEPD(INITIAL_KKE_PD);
+  };
+
+  // 2. KKE JUKNIS
+  const [kkeJuknisData, setKkeJuknisData] = useState(() => StorageService.getKKEJuknis());
+  const [isJuknisModalOpen, setIsJuknisModalOpen] = useState(false);
+  const [editingJuknisItem, setEditingJuknisItem] = useState<KKEJuknisItem | null>(null);
+  const [isEditingJuknisTujuan, setIsEditingJuknisTujuan] = useState(false);
+  const [juknisFormData, setJuknisFormData] = useState({
+    nomor: 1,
+    judul: '',
+    uraian: '',
+    tujuan: '',
+  });
+
+  const handleOpenEditJuknisTujuan = () => {
+    setIsEditingJuknisTujuan(true);
+    setEditingJuknisItem(null);
+    setJuknisFormData({
+      nomor: 1,
+      judul: '',
+      uraian: '',
+      tujuan: kkeJuknisData.tujuan,
+    });
+    setIsJuknisModalOpen(true);
+  };
+
+  const handleOpenAddJuknisItem = () => {
+    setIsEditingJuknisTujuan(false);
+    setEditingJuknisItem(null);
+    setJuknisFormData({
+      nomor: kkeJuknisData.items.length + 1,
+      judul: '',
+      uraian: '',
+      tujuan: '',
+    });
+    setIsJuknisModalOpen(true);
+  };
+
+  const handleOpenEditJuknisItem = (item: KKEJuknisItem) => {
+    setIsEditingJuknisTujuan(false);
+    setEditingJuknisItem(item);
+    setJuknisFormData({
+      nomor: item.nomor,
+      judul: item.judul,
+      uraian: item.uraian,
+      tujuan: '',
+    });
+    setIsJuknisModalOpen(true);
+  };
+
+  const handleSaveJuknisForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditingJuknisTujuan) {
+      const updated = { ...kkeJuknisData, tujuan: juknisFormData.tujuan };
+      setKkeJuknisData(updated);
+      StorageService.saveKKEJuknis(updated);
+    } else if (editingJuknisItem) {
+      const updatedItems = kkeJuknisData.items.map((it) =>
+        it.id === editingJuknisItem.id
+          ? { ...it, nomor: juknisFormData.nomor, judul: juknisFormData.judul, uraian: juknisFormData.uraian }
+          : it
+      );
+      const updated = { ...kkeJuknisData, items: updatedItems };
+      setKkeJuknisData(updated);
+      StorageService.saveKKEJuknis(updated);
+    } else {
+      const newItem: KKEJuknisItem = {
+        id: 'juknis-' + Date.now(),
+        nomor: juknisFormData.nomor,
+        judul: juknisFormData.judul,
+        uraian: juknisFormData.uraian,
+      };
+      const updated = { ...kkeJuknisData, items: [...kkeJuknisData.items, newItem] };
+      setKkeJuknisData(updated);
+      StorageService.saveKKEJuknis(updated);
+    }
+    setIsJuknisModalOpen(false);
+  };
+
+  const handleDeleteJuknisItem = (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus butir petunjuk teknis ini?')) return;
+    const updated = {
+      ...kkeJuknisData,
+      items: kkeJuknisData.items.filter((it) => it.id !== id),
+    };
+    setKkeJuknisData(updated);
+    StorageService.saveKKEJuknis(updated);
+  };
+
+  const handleResetJuknis = () => {
+    if (!window.confirm('Kembalikan seluruh teks Petunjuk Teknis ke format awal?')) return;
+    setKkeJuknisData(INITIAL_KKE_JUKNIS);
+    StorageService.saveKKEJuknis(INITIAL_KKE_JUKNIS);
+  };
+
+  // 3. KKE PENJELASAN
+  const [kkePenjelasanData, setKkePenjelasanData] = useState(() => StorageService.getKKEPenjelasan());
+  const [isPenjelasanModalOpen, setIsPenjelasanModalOpen] = useState(false);
+  const [editingPenjelasanItem, setEditingPenjelasanItem] = useState<KKEPenjelasanItem | null>(null);
+  const [isEditingPengantar, setIsEditingPengantar] = useState(false);
+  const [penjelasanFormData, setPenjelasanFormData] = useState({
+    judul: '',
+    deskripsi: '',
+    kategori: 'Perencanaan',
+    pengantar: '',
+  });
+
+  const handleOpenEditPengantar = () => {
+    setIsEditingPengantar(true);
+    setEditingPenjelasanItem(null);
+    setPenjelasanFormData({
+      judul: '',
+      deskripsi: '',
+      kategori: '',
+      pengantar: kkePenjelasanData.pengantar,
+    });
+    setIsPenjelasanModalOpen(true);
+  };
+
+  const handleOpenAddPenjelasanItem = () => {
+    setIsEditingPengantar(false);
+    setEditingPenjelasanItem(null);
+    setPenjelasanFormData({
+      judul: '',
+      deskripsi: '',
+      kategori: 'Perencanaan',
+      pengantar: '',
+    });
+    setIsPenjelasanModalOpen(true);
+  };
+
+  const handleOpenEditPenjelasanItem = (item: KKEPenjelasanItem) => {
+    setIsEditingPengantar(false);
+    setEditingPenjelasanItem(item);
+    setPenjelasanFormData({
+      judul: item.judul,
+      deskripsi: item.deskripsi,
+      kategori: item.kategori || 'Umum',
+      pengantar: '',
+    });
+    setIsPenjelasanModalOpen(true);
+  };
+
+  const handleSavePenjelasanForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditingPengantar) {
+      const updated = { ...kkePenjelasanData, pengantar: penjelasanFormData.pengantar };
+      setKkePenjelasanData(updated);
+      StorageService.saveKKEPenjelasan(updated);
+    } else if (editingPenjelasanItem) {
+      const updatedItems = kkePenjelasanData.items.map((it) =>
+        it.id === editingPenjelasanItem.id
+          ? { ...it, judul: penjelasanFormData.judul, deskripsi: penjelasanFormData.deskripsi, kategori: penjelasanFormData.kategori }
+          : it
+      );
+      const updated = { ...kkePenjelasanData, items: updatedItems };
+      setKkePenjelasanData(updated);
+      StorageService.saveKKEPenjelasan(updated);
+    } else {
+      const newItem: KKEPenjelasanItem = {
+        id: 'penj-' + Date.now(),
+        judul: penjelasanFormData.judul,
+        deskripsi: penjelasanFormData.deskripsi,
+        kategori: penjelasanFormData.kategori || 'Umum',
+      };
+      const updated = { ...kkePenjelasanData, items: [...kkePenjelasanData.items, newItem] };
+      setKkePenjelasanData(updated);
+      StorageService.saveKKEPenjelasan(updated);
+    }
+    setIsPenjelasanModalOpen(false);
+  };
+
+  const handleDeletePenjelasanItem = (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus kartu penjelasan ini?')) return;
+    const updated = {
+      ...kkePenjelasanData,
+      items: kkePenjelasanData.items.filter((it) => it.id !== id),
+    };
+    setKkePenjelasanData(updated);
+    StorageService.saveKKEPenjelasan(updated);
+  };
+
+  const handleResetPenjelasan = () => {
+    if (!window.confirm('Kembalikan seluruh teks Penjelasan ke format awal?')) return;
+    setKkePenjelasanData(INITIAL_KKE_PENJELASAN);
+    StorageService.saveKKEPenjelasan(INITIAL_KKE_PENJELASAN);
+  };
+
+  // 4. KKE 1.b.4 (Cascading)
+  const [kke1b4List, setKke1b4List] = useState<KKE1b4Item[]>(() => StorageService.getKKE1b4());
+  const [is1b4ModalOpen, setIs1b4ModalOpen] = useState(false);
+  const [editing1b4, setEditing1b4] = useState<KKE1b4Item | null>(null);
+  const [formData1b4, setFormData1b4] = useState({
+    tujuanKode: 'T1',
+    tujuanNama: '',
+    tujuanCatatan: '',
+    indikatorTujuan: '',
+    sasaranStrategis: '',
+    sasaranCatatan: '',
+    programRawText: '',
+  });
+
+  const handleOpenAdd1b4 = () => {
+    setEditing1b4(null);
+    setFormData1b4({
+      tujuanKode: 'T' + (kke1b4List.length + 1),
+      tujuanNama: '',
+      tujuanCatatan: 'Selaras Renstra, Renja, Pohon Kinerja & Cascading',
+      indikatorTujuan: '',
+      sasaranStrategis: '',
+      sasaranCatatan: '',
+      programRawText: 'p1: Program Pelatihan Kerja | Indikator: Tingkat Produktivitas Tenaga Kerja',
+    });
+    setIs1b4ModalOpen(true);
+  };
+
+  const handleOpenEdit1b4 = (item: KKE1b4Item) => {
+    setEditing1b4(item);
+    const progText = item.programList
+      .map((p) => `${p.kode}: ${p.nama} | Indikator: ${p.indikator}`)
+      .join('\n');
+    setFormData1b4({
+      tujuanKode: item.tujuanKode,
+      tujuanNama: item.tujuanNama,
+      tujuanCatatan: item.tujuanCatatan,
+      indikatorTujuan: item.indikatorTujuan,
+      sasaranStrategis: item.sasaranStrategis,
+      sasaranCatatan: item.sasaranCatatan,
+      programRawText: progText,
+    });
+    setIs1b4ModalOpen(true);
+  };
+
+  const handleSave1b4Form = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsedPrograms = formData1b4.programRawText
+      .split('\n')
+      .filter((line) => line.trim().length > 0)
+      .map((line, idx) => {
+        const parts = line.split('|');
+        const mainPart = parts[0] || '';
+        const indPart = parts[1] || '';
+        const colonIdx = mainPart.indexOf(':');
+        const kode = colonIdx !== -1 ? mainPart.substring(0, colonIdx).trim() : `p${idx + 1}`;
+        const nama = colonIdx !== -1 ? mainPart.substring(colonIdx + 1).trim() : mainPart.trim();
+        const indikator = indPart.replace(/^Indikator:\s*/i, '').trim() || 'Indikator program terukur';
+        return {
+          id: 'prog-' + idx + '-' + Date.now(),
+          kode,
+          nama,
+          indikator,
+        };
+      });
+
+    let updated: KKE1b4Item[];
+    if (editing1b4) {
+      updated = kke1b4List.map((item) =>
+        item.id === editing1b4.id
+          ? {
+              ...item,
+              tujuanKode: formData1b4.tujuanKode,
+              tujuanNama: formData1b4.tujuanNama,
+              tujuanCatatan: formData1b4.tujuanCatatan,
+              indikatorTujuan: formData1b4.indikatorTujuan,
+              sasaranStrategis: formData1b4.sasaranStrategis,
+              sasaranCatatan: formData1b4.sasaranCatatan,
+              programList: parsedPrograms.length > 0 ? parsedPrograms : item.programList,
+            }
+          : item
+      );
+    } else {
+      const newItem: KKE1b4Item = {
+        id: 'casc-' + Date.now(),
+        tujuanKode: formData1b4.tujuanKode,
+        tujuanNama: formData1b4.tujuanNama,
+        tujuanCatatan: formData1b4.tujuanCatatan,
+        indikatorTujuan: formData1b4.indikatorTujuan,
+        sasaranStrategis: formData1b4.sasaranStrategis,
+        sasaranCatatan: formData1b4.sasaranCatatan,
+        programList: parsedPrograms,
+      };
+      updated = [...kke1b4List, newItem];
+    }
+    setKke1b4List(updated);
+    StorageService.saveKKE1b4(updated);
+    setIs1b4ModalOpen(false);
+  };
+
+  const handleDelete1b4 = (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus baris pohon kinerja cascading ini?')) return;
+    const updated = kke1b4List.filter((it) => it.id !== id);
+    setKke1b4List(updated);
+    StorageService.saveKKE1b4(updated);
+  };
+
+  const handleReset1b4 = () => {
+    if (!window.confirm('Kembalikan pohon kinerja cascading ke format standar?')) return;
+    setKke1b4List(INITIAL_KKE_1B4);
+    StorageService.saveKKE1b4(INITIAL_KKE_1B4);
+  };
+
+  // 5. KKE 1.b.5 (Matriks Penyelarasan)
+  const [kke1b5List, setKke1b5List] = useState<KKE1b5Item[]>(() => StorageService.getKKE1b5());
+  const [is1b5ModalOpen, setIs1b5ModalOpen] = useState(false);
+  const [editing1b5, setEditing1b5] = useState<KKE1b5Item | null>(null);
+  const [formData1b5, setFormData1b5] = useState<Partial<KKE1b5Item>>({
+    sasaranStrategis: '',
+    indikatorKinerjaUtama: '',
+    target: '',
+    programKegiatan: '',
+    unitPelaksana: '',
+  });
+
+  const handleOpenAdd1b5 = () => {
+    setEditing1b5(null);
+    setFormData1b5({
+      sasaranStrategis: '',
+      indikatorKinerjaUtama: '',
+      target: '50.00%',
+      programKegiatan: '',
+      unitPelaksana: 'Bidang Pembinaan & Penempatan Tenaga Kerja',
+    });
+    setIs1b5ModalOpen(true);
+  };
+
+  const handleOpenEdit1b5 = (item: KKE1b5Item) => {
+    setEditing1b5(item);
+    setFormData1b5({ ...item });
+    setIs1b5ModalOpen(true);
+  };
+
+  const handleSave1b5Form = (e: React.FormEvent) => {
+    e.preventDefault();
+    let updated: KKE1b5Item[];
+    if (editing1b5) {
+      updated = kke1b5List.map((item) =>
+        item.id === editing1b5.id ? ({ ...item, ...formData1b5 } as KKE1b5Item) : item
+      );
+    } else {
+      const newItem: KKE1b5Item = {
+        id: 'mat-' + Date.now(),
+        sasaranStrategis: formData1b5.sasaranStrategis || '',
+        indikatorKinerjaUtama: formData1b5.indikatorKinerjaUtama || '',
+        target: formData1b5.target || '',
+        programKegiatan: formData1b5.programKegiatan || '',
+        unitPelaksana: formData1b5.unitPelaksana || '',
+      };
+      updated = [...kke1b5List, newItem];
+    }
+    setKke1b5List(updated);
+    StorageService.saveKKE1b5(updated);
+    setIs1b5ModalOpen(false);
+  };
+
+  const handleDelete1b5 = (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus baris matriks ini?')) return;
+    const updated = kke1b5List.filter((it) => it.id !== id);
+    setKke1b5List(updated);
+    StorageService.saveKKE1b5(updated);
+  };
+
+  const handleReset1b5 = () => {
+    if (!window.confirm('Kembalikan matriks penyelarasan ke format standar awal?')) return;
+    setKke1b5List(INITIAL_KKE_1B5);
+    StorageService.saveKKE1b5(INITIAL_KKE_1B5);
+  };
+
+  // 6. KKE 2.b.1 (Kuesioner Pengukuran)
+  const [kke2b1List, setKke2b1List] = useState<KKE2b1Item[]>(() => StorageService.getKKE2b1());
+  const [is2b1ModalOpen, setIs2b1ModalOpen] = useState(false);
+  const [editing2b1, setEditing2b1] = useState<KKE2b1Item | null>(null);
+  const [formData2b1, setFormData2b1] = useState<Partial<KKE2b1Item>>({
+    q: '',
+    status: '',
+    skor: 'A (Sangat Baik)',
+  });
+
+  const handleOpenAdd2b1 = () => {
+    setEditing2b1(null);
+    setFormData2b1({
+      q: '',
+      status: 'Ya, terdokumentasi secara tertib',
+      skor: 'A (Sangat Baik)',
+    });
+    setIs2b1ModalOpen(true);
+  };
+
+  const handleOpenEdit2b1 = (item: KKE2b1Item) => {
+    setEditing2b1(item);
+    setFormData2b1({ ...item });
+    setIs2b1ModalOpen(true);
+  };
+
+  const handleSave2b1Form = (e: React.FormEvent) => {
+    e.preventDefault();
+    let updated: KKE2b1Item[];
+    if (editing2b1) {
+      updated = kke2b1List.map((item) =>
+        item.id === editing2b1.id ? ({ ...item, ...formData2b1 } as KKE2b1Item) : item
+      );
+    } else {
+      const newItem: KKE2b1Item = {
+        id: 'kues-2b1-' + Date.now(),
+        q: formData2b1.q || '',
+        status: formData2b1.status || '',
+        skor: formData2b1.skor || 'A (Sangat Baik)',
+      };
+      updated = [...kke2b1List, newItem];
+    }
+    setKke2b1List(updated);
+    StorageService.saveKKE2b1(updated);
+    setIs2b1ModalOpen(false);
+  };
+
+  const handleDelete2b1 = (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus butir kuesioner ini?')) return;
+    const updated = kke2b1List.filter((it) => it.id !== id);
+    setKke2b1List(updated);
+    StorageService.saveKKE2b1(updated);
+  };
+
+  const handleReset2b1 = () => {
+    if (!window.confirm('Kembalikan kuesioner pengukuran ke format standar?')) return;
+    setKke2b1List(INITIAL_KKE_2B1);
+    StorageService.saveKKE2b1(INITIAL_KKE_2B1);
+  };
+
+  // 7. KKE 2.c.1 (Kuesioner Pemanfaatan)
+  const [kke2c1List, setKke2c1List] = useState<KKE2c1Item[]>(() => StorageService.getKKE2c1());
+  const [is2c1ModalOpen, setIs2c1ModalOpen] = useState(false);
+  const [editing2c1, setEditing2c1] = useState<KKE2c1Item | null>(null);
+  const [formData2c1, setFormData2c1] = useState<Partial<KKE2c1Item>>({
+    q: '',
+    status: '',
+    skor: 'A (Sangat Baik)',
+  });
+
+  const handleOpenAdd2c1 = () => {
+    setEditing2c1(null);
+    setFormData2c1({
+      q: '',
+      status: 'Ya, dijadikan dasar evaluasi tindak lanjut',
+      skor: 'A (Sangat Baik)',
+    });
+    setIs2c1ModalOpen(true);
+  };
+
+  const handleOpenEdit2c1 = (item: KKE2c1Item) => {
+    setEditing2c1(item);
+    setFormData2c1({ ...item });
+    setIs2c1ModalOpen(true);
+  };
+
+  const handleSave2c1Form = (e: React.FormEvent) => {
+    e.preventDefault();
+    let updated: KKE2c1Item[];
+    if (editing2c1) {
+      updated = kke2c1List.map((item) =>
+        item.id === editing2c1.id ? ({ ...item, ...formData2c1 } as KKE2c1Item) : item
+      );
+    } else {
+      const newItem: KKE2c1Item = {
+        id: 'kues-2c1-' + Date.now(),
+        q: formData2c1.q || '',
+        status: formData2c1.status || '',
+        skor: formData2c1.skor || 'A (Sangat Baik)',
+      };
+      updated = [...kke2c1List, newItem];
+    }
+    setKke2c1List(updated);
+    StorageService.saveKKE2c1(updated);
+    setIs2c1ModalOpen(false);
+  };
+
+  const handleDelete2c1 = (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus butir kuesioner ini?')) return;
+    const updated = kke2c1List.filter((it) => it.id !== id);
+    setKke2c1List(updated);
+    StorageService.saveKKE2c1(updated);
+  };
+
+  const handleReset2c1 = () => {
+    if (!window.confirm('Kembalikan kuesioner pemanfaatan ke format standar?')) return;
+    setKke2c1List(INITIAL_KKE_2C1);
+    StorageService.saveKKE2c1(INITIAL_KKE_2C1);
+  };
 
   // Handle XLSX file upload
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -771,100 +1341,129 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
       {/* TAB 4: KKE PD */}
       {activeSubTab === 'kke-pd' && (
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
             <div>
-              <h3 className="text-base font-bold text-slate-900">
-                Kertas Kerja Evaluasi Perangkat Daerah (KKE PD)
-              </h3>
-              <p className="text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">
+                  Kertas Kerja Evaluasi Perangkat Daerah (KKE PD)
+                </h3>
+                <span className="text-[11px] bg-blue-100 text-blue-900 font-bold px-2 py-0.5 rounded">
+                  Instrumen Resmi Inspektorat
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
                 Format Lembar Kerja Evaluasi Mandiri SAKIP Dinas Transmigrasi dan Tenaga Kerja Luwu Utara
               </p>
             </div>
-            <span className="text-xs bg-blue-100 text-blue-900 font-bold px-2.5 py-1 rounded">
-              Instrumen Resmi Inspektorat
-            </span>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenAddKKEPD}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Butir KKE PD</span>
+                </button>
+                <button
+                  onClick={handleResetKKEPD}
+                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs flex items-center gap-1"
+                  title="Kembalikan ke format standar"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Reset Default</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
+          {isAdmin && (
+            <div className="flex items-center justify-between px-3.5 py-2 bg-blue-50/70 border border-blue-200 rounded-lg text-xs text-blue-900">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span><strong>Mode Administrator SAKIP:</strong> Klik tombol edit pada baris tabel untuk memperbarui pertanyaan, jawaban, atau link evidence.</span>
+              </span>
+              <span className="text-[11px] font-semibold text-blue-800 bg-blue-100/70 px-2 py-0.5 rounded">
+                Total: {kkePDList.length} Butir
+              </span>
+            </div>
+          )}
+
+          <div className="border border-slate-200 rounded-xl overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-100 font-bold text-slate-700 border-b border-slate-200 text-[11px] uppercase">
                   <th className="py-2.5 px-3 w-12 text-center">No</th>
-                  <th className="py-2.5 px-3 w-28">Sub-Komponen</th>
-                  <th className="py-2.5 px-4">Pertanyaan Evaluasi / Kriteria Pemenuhan</th>
+                  <th className="py-2.5 px-3 w-32">Sub-Komponen</th>
+                  <th className="py-2.5 px-4 min-w-[260px]">Pertanyaan Evaluasi / Kriteria Pemenuhan</th>
                   <th className="py-2.5 px-3 w-24 text-center">Jawaban</th>
-                  <th className="py-2.5 px-4 w-60">Link Evidence</th>
+                  <th className="py-2.5 px-4 min-w-[200px]">Link Evidence</th>
+                  <th className="py-2.5 px-3 min-w-[140px]">Catatan</th>
+                  {isAdmin && <th className="py-2.5 px-3 w-20 text-center">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
-                {[
-                  {
-                    sub: '1.a Dokumen',
-                    q: 'Terdapat Peraturan Daerah Nomor 03 Tahun 2014 Tentang Sistem Perencanaan Pembangunan Daerah',
-                    ans: 'Ya',
-                    link: 'https://drive.google.com/file/d/1DkAlyAqjLPI4fNEHUjMi2hrrQ6xBSPZ6/view?usp=sharing',
-                  },
-                  {
-                    sub: '1.a Dokumen',
-                    q: 'Terdapat Renstra Distransnaker 2021-2026',
-                    ans: 'Ya',
-                    link: 'https://drive.google.com/file/d/1cKgiu3pPi5FMdL7RiIhxumZPWLrJ_4Uq/view?usp=sharing',
-                  },
-                  {
-                    sub: '1.a Dokumen',
-                    q: 'Terdapat Renja Distransnaker 2024 / 2026',
-                    ans: 'Ya',
-                    link: 'https://drive.google.com/file/d/1EF8AkJp6qWwDbRS2lg-IBP1b80ul8n71/view?usp=sharing',
-                  },
-                  {
-                    sub: '1.b Cascading',
-                    q: 'Sebagian dokumen 1a telah diformalkan, IKU telah diformalkan dan PK telah ditandatangani',
-                    ans: 'Ya',
-                    link: 'https://drive.google.com/file/d/1oMDZwCCK0leuDmOlIx0XDtIaZcS56vIs/view?usp=sharing',
-                  },
-                  {
-                    sub: '2.a Manual IKU',
-                    q: 'Formulasi pengukuran indikator sesuai Permendagri No. 18 Tahun 2020',
-                    ans: 'Ya',
-                    link: 'https://peraturan.bpk.go.id/Details/138501/permendagri-no-18-tahun-2020',
-                  },
-                  {
-                    sub: '2.a SOP',
-                    q: 'SOP pengumpulan dan pengukuran kinerja',
-                    ans: 'Ya',
-                    link: 'https://drive.google.com/file/d/1xFEe2WdG_7p_sg3TW_XBsS7aVqhcTIOF/view?usp=sharing',
-                  },
-                  {
-                    sub: '3.a LAKIP',
-                    q: 'Dokumen LAKIP telah disusun dan dipublikasikan tepat waktu',
-                    ans: 'Ya',
-                    link: 'https://drive.google.com/file/d/1AfWnUvMLMY9Y9cEnI06fn-H3s3oS-Jim/view?usp=sharing',
-                  },
-                  {
-                    sub: '4.c Tindak Lanjut',
-                    q: 'Tindak Lanjut rekomendasi LHE SAKIP Inspektorat',
-                    ans: 'Ya',
-                    link: 'https://drive.google.com/file/d/1xj2m2FYE9-Aw5VWDK2SJ10usr2BiLi5B/view?usp=sharing',
-                  },
-                ].map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 text-center text-slate-500 font-bold">{idx + 1}</td>
-                    <td className="py-2.5 px-3 font-semibold text-slate-700">{row.sub}</td>
-                    <td className="py-2.5 px-4 font-medium text-slate-900">{row.q}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-emerald-700">{row.ans}</td>
-                    <td className="py-2.5 px-4">
-                      <a
-                        href={row.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 font-semibold bg-blue-50 px-2.5 py-1 rounded border border-blue-200 text-[11px]"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Buka Link Evidence</span>
-                      </a>
+                {kkePDList.length === 0 ? (
+                  <tr>
+                    <td colSpan={isAdmin ? 7 : 6} className="py-8 text-center text-slate-400">
+                      Belum ada data butir KKE PD. Klik "Tambah Butir KKE PD" di atas.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  kkePDList.map((row, idx) => (
+                    <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3 text-center text-slate-500 font-bold">{idx + 1}</td>
+                      <td className="py-2.5 px-3 font-semibold text-slate-700">{row.sub}</td>
+                      <td className="py-2.5 px-4 font-medium text-slate-900">{row.q}</td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className={`inline-block font-bold px-2 py-0.5 rounded text-[11px] ${
+                          row.ans === 'Ya' || row.ans === 'A' || row.ans === 'Ada dan Berkualitas'
+                            ? 'text-emerald-800 bg-emerald-100'
+                            : 'text-amber-800 bg-amber-100'
+                        }`}>
+                          {row.ans}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4">
+                        {row.link ? (
+                          <a
+                            href={row.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 font-semibold bg-blue-50 px-2.5 py-1 rounded border border-blue-200 text-[11px]"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Buka Link Evidence</span>
+                          </a>
+                        ) : (
+                          <span className="text-slate-400 italic text-[11px]">Belum ditautkan</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 text-[11px]">
+                        {row.catatan || '-'}
+                      </td>
+                      {isAdmin && (
+                        <td className="py-2.5 px-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleOpenEditKKEPD(row)}
+                              className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                              title="Edit Butir KKE PD"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteKKEPD(row.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                              title="Hapus Butir KKE PD"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -873,134 +1472,324 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
 
       {/* TAB 5: KKE PD JUKNIS */}
       {activeSubTab === 'kke-juknis' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-4 text-xs">
-          <h3 className="text-base font-bold text-slate-900 border-b pb-2">
-            Petunjuk Teknis (Juknis) Pengisian Kertas Kerja Evaluasi Perangkat Daerah
-          </h3>
-          <div className="space-y-4 text-slate-700 leading-relaxed">
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <h4 className="font-bold text-slate-900 mb-1">Tujuan Petunjuk Teknis:</h4>
-              <p>
-                Memberikan panduan operasional bagi tim SAKIP dan operator di masing-masing bidang pada
-                Dinas Transmigrasi dan Tenaga Kerja dalam mempersiapkan, memverifikasi, dan mengunggah Link Evidence evaluasi akuntabilitas kinerja instansi.
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-5 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Petunjuk Teknis (Juknis) Pengisian Kertas Kerja Evaluasi Perangkat Daerah
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Pedoman operasional SAKIP Dinas Transmigrasi dan Tenaga Kerja Kabupaten Luwu Utara
               </p>
             </div>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenAddJuknisItem}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Poin Juknis</span>
+                </button>
+                <button
+                  onClick={handleResetJuknis}
+                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs flex items-center gap-1"
+                  title="Kembalikan ke teks default"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Reset Default</span>
+                </button>
+              </div>
+            )}
+          </div>
 
-            <ol className="list-decimal pl-5 space-y-2 text-slate-800">
-              <li>
-                <strong>Verifikasi Ketersediaan Dokumen:</strong> Pastikan seluruh dokumen perencanaan
-                (Renstra, IKU, RKT, PK) telah ditandatangani secara sah dan memiliki nomor surat resmi.
-              </li>
-              <li>
-                <strong>Kesesuaian Data Triwulanan:</strong> Angka realisasi pada tabel capaian kinerja harus
-                bersumber dari dokumen primer seperti DPA, laporan RFK bidang, atau publikasi resmi BPS / BPJS.
-              </li>
-              <li>
-                <strong>Penyediaan Link Evidence:</strong> Setiap indikator wajib dilengkapi Link Evidence
-                aktif berupa link Google Drive atau publikasi resmi peraturan.
-              </li>
-              <li>
-                <strong>Pemberian Skor:</strong> Skor pemenuhan mengacu pada pedoman PermenPAN-RB No. 88
-                Tahun 2021 dengan rentang penilaian 0% s/d 100%.
-              </li>
-            </ol>
+          {/* Tujuan Juknis Card */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative group">
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="font-bold text-slate-900 mb-1.5 text-xs uppercase tracking-wider text-blue-900">
+                  Tujuan Petunjuk Teknis:
+                </h4>
+                <p className="text-slate-700 leading-relaxed">
+                  {kkeJuknisData.tujuan}
+                </p>
+              </div>
+              {isAdmin && (
+                <button
+                  onClick={handleOpenEditJuknisTujuan}
+                  className="ml-3 px-2 py-1 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-300 text-blue-700 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors shrink-0 shadow-2xs"
+                  title="Edit teks tujuan juknis"
+                >
+                  <Edit2 className="w-3 h-3" />
+                  <span>Edit Tujuan</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Juknis Items List */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wide">
+                Langkah-Langkah & Ketentuan Pengisian ({kkeJuknisData.items.length} Poin)
+              </h4>
+              {isAdmin && (
+                <span className="text-[11px] text-blue-700 font-medium">
+                  Akses Edit Administrator Aktif
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-2.5">
+              {kkeJuknisData.items.map((it, idx) => (
+                <div
+                  key={it.id}
+                  className="p-3.5 bg-white rounded-lg border border-slate-200 hover:border-blue-200 transition-all flex items-start justify-between gap-3 shadow-2xs"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-900 font-bold flex items-center justify-center text-xs shrink-0 mt-0.5">
+                      {it.nomor || idx + 1}
+                    </span>
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-xs mb-1">
+                        {it.judul}
+                      </h5>
+                      <p className="text-slate-700 leading-relaxed text-[11px]">
+                        {it.uraian}
+                      </p>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                      <button
+                        onClick={() => handleOpenEditJuknisItem(it)}
+                        className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit butir juknis"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteJuknisItem(it.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                        title="Hapus butir juknis"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* TAB 6: KKE PD PENJELASAN */}
       {activeSubTab === 'kke-penjelasan' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-4 text-xs">
-          <h3 className="text-base font-bold text-slate-900 border-b pb-2">
-            Penjelasan Instrumen & Indikator KKE Perangkat Daerah
-          </h3>
-          <div className="space-y-3 text-slate-700">
-            <p>
-              Penjelasan kriteria penilaian dimaksudkan untuk memastikan kesamaan persepsi antara evaluator
-              (Inspektorat Kabupaten Luwu Utara) dan tim penyusun SAKIP Dinas Transnaker.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50">
-                <p className="font-bold text-blue-900 mb-1">Kualitas Renstra & IKU</p>
-                <p className="text-[11px] leading-relaxed">
-                  IKU harus berorientasi pada hasil (outcome) bukan sekadar output kegiatan. Sebagai contoh,
-                  persentase penyerapan tenaga kerja formal dan rasio kemandirian transmigran.
-                </p>
-              </div>
-              <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50">
-                <p className="font-bold text-blue-900 mb-1">Cascading Kinerja Berjenjang</p>
-                <p className="text-[11px] leading-relaxed">
-                  Pohon kinerja harus menggambarkan hubungan sebab-akibat (cause and effect) yang logis dari
-                  sasaran strategis kepala dinas hingga indikator kinerja individu pelaksana.
-                </p>
-              </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-5 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Penjelasan Instrumen & Indikator KKE Perangkat Daerah
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Kriteria penilaian evaluator Inspektorat Kabupaten Luwu Utara
+              </p>
             </div>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenAddPenjelasanItem}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Kartu Penjelasan</span>
+                </button>
+                <button
+                  onClick={handleResetPenjelasan}
+                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs flex items-center gap-1"
+                  title="Kembalikan ke teks default"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Reset Default</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Pengantar Penjelasan */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-3">
+            <p className="text-slate-700 leading-relaxed">
+              {kkePenjelasanData.pengantar}
+            </p>
+            {isAdmin && (
+              <button
+                onClick={handleOpenEditPengantar}
+                className="px-2 py-1 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-300 text-blue-700 rounded text-[11px] font-semibold flex items-center gap-1 shrink-0 shadow-2xs"
+                title="Edit teks pengantar penjelasan"
+              >
+                <Edit2 className="w-3 h-3" />
+                <span>Edit Pengantar</span>
+              </button>
+            )}
+          </div>
+
+          {/* Grid Kartu Penjelasan */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {kkePenjelasanData.items.map((it) => (
+              <div
+                key={it.id}
+                className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-200 transition-all flex flex-col justify-between shadow-2xs"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                      {it.kategori || 'Umum'}
+                    </span>
+                    {isAdmin && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleOpenEditPenjelasanItem(it)}
+                          className="p-1 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                          title="Edit kartu ini"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePenjelasanItem(it.id)}
+                          className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded"
+                          title="Hapus kartu ini"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-xs mb-1.5">
+                    {it.judul}
+                  </h4>
+                  <p className="text-[11px] text-slate-700 leading-relaxed">
+                    {it.deskripsi}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* TAB 7: KKE 1.b.4 (Cascading Pohon Kinerja - Dari Data Resmi PDF/XLSX) */}
+      {/* TAB 7: KKE 1.b.4 (Cascading Pohon Kinerja) */}
       {activeSubTab === 'kke-1b4' && (
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
             <div>
-              <h3 className="text-base font-bold text-slate-900">
-                KKE 1.b.4 - Keterkaitan Tujuan, Sasaran dan Program (Cascading)
-              </h3>
-              <p className="text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">
+                  KKE 1.b.4 - Keterkaitan Tujuan, Sasaran dan Program (Cascading)
+                </h3>
+                <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">
+                  Pohon Kinerja Resmi
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
                 Sesuai Lampiran Data Workbook SAKIP Dinas Transmigrasi dan Tenaga Kerja Luwu Utara
               </p>
             </div>
-            <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">
-              Pohon Kinerja Resmi
-            </span>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenAdd1b4}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Cascading</span>
+                </button>
+                <button
+                  onClick={handleReset1b4}
+                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs flex items-center gap-1"
+                  title="Kembalikan ke data standar"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Reset Default</span>
+                </button>
+              </div>
+            )}
           </div>
+
+          {isAdmin && (
+            <div className="flex items-center justify-between px-3.5 py-2 bg-blue-50/70 border border-blue-200 rounded-lg text-xs text-blue-900">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span><strong>Mode Administrator SAKIP:</strong> Klik tombol edit untuk memperbarui tujuan, indikator, sasaran, maupun daftar program & indikatornya.</span>
+              </span>
+            </div>
+          )}
 
           <div className="space-y-4 text-xs">
             <div className="border border-slate-300 rounded-xl overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-amber-100/80 text-amber-950 font-bold border-b border-amber-300 text-[11px]">
-                    <th className="py-2.5 px-3 border-r border-amber-200">Tujuan (Renstra, Renja, Pohon Kinerja)</th>
-                    <th className="py-2.5 px-3 border-r border-amber-200">Indikator Tujuan</th>
-                    <th className="py-2.5 px-3 border-r border-amber-200">Sasaran Strategis</th>
+                    <th className="py-2.5 px-3 border-r border-amber-200 w-64">Tujuan (Renstra, Renja, Pohon Kinerja)</th>
+                    <th className="py-2.5 px-3 border-r border-amber-200 w-44">Indikator Tujuan</th>
+                    <th className="py-2.5 px-3 border-r border-amber-200 w-64">Sasaran Strategis</th>
                     <th className="py-2.5 px-3">Program & Indikator Program</th>
+                    {isAdmin && <th className="py-2.5 px-3 w-16 text-center">Aksi</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-800">
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-3 px-3 border-r border-slate-200 font-medium">
-                      <strong>T1 : Meningkatkan Kualitas Pembangunan Manusia</strong>
-                      <p className="text-[10px] text-slate-500 mt-1">Selaras Renstra, Renja, Pohon Kinerja & Cascading</p>
-                    </td>
-                    <td className="py-3 px-3 border-r border-slate-200 font-semibold text-blue-900">
-                      Indeks Pembangunan Manusia (IPM)
-                    </td>
-                    <td className="py-3 px-3 border-r border-slate-200">
-                      <strong>Meningkatnya pemerataan pembangunan sektor ekonomi dan Penanggulangan Kemiskinan</strong>
-                      <p className="text-[10px] text-slate-500 mt-1">Indikator: Pertumbuhan Ekonomi & TPT</p>
-                    </td>
-                    <td className="py-3 px-3 space-y-2">
-                      <div className="p-2 bg-blue-50/60 rounded border border-blue-100">
-                        <strong className="text-blue-900">p1: Program Pelatihan Kerja & Produktivitas</strong>
-                        <p className="text-[10px] text-slate-600 mt-0.5">• Tingkat Produktivitas Tenaga Kerja</p>
-                        <p className="text-[10px] text-slate-600">• Persentase Tenaga Kerja Bersertifikat Kompetensi</p>
-                      </div>
-                      <div className="p-2 bg-emerald-50/60 rounded border border-emerald-100">
-                        <strong className="text-emerald-900">p2: Program Penempatan Tenaga Kerja</strong>
-                        <p className="text-[10px] text-slate-600 mt-0.5">• Persentase Tenaga Kerja yang Ditempatkan di Dalam & Luar Negeri</p>
-                      </div>
-                      <div className="p-2 bg-purple-50/60 rounded border border-purple-100">
-                        <strong className="text-purple-900">p3: Program Hubungan Industrial</strong>
-                        <p className="text-[10px] text-slate-600 mt-0.5">• Persentase Perusahaan Menerapkan Tata Kelola Layak (PP/PKB, BPJS)</p>
-                      </div>
-                      <div className="p-2 bg-amber-50/60 rounded border border-amber-100">
-                        <strong className="text-amber-900">Program Perencanaan & Pengembangan Kawasan Transmigrasi</strong>
-                        <p className="text-[10px] text-slate-600 mt-0.5">• Persentase jumlah kawasan transmigrasi difasilitasi penetapannya</p>
-                        <p className="text-[10px] text-slate-600">• Persentase Pengembangan Kawasan Transmigrasi</p>
-                      </div>
-                    </td>
-                  </tr>
+                  {kke1b4List.map((row) => (
+                    <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-3 border-r border-slate-200 font-medium align-top">
+                        <strong className="text-slate-900">{row.tujuanKode} : {row.tujuanNama}</strong>
+                        <p className="text-[10px] text-slate-500 mt-1">{row.tujuanCatatan}</p>
+                      </td>
+                      <td className="py-3 px-3 border-r border-slate-200 font-semibold text-blue-900 align-top">
+                        {row.indikatorTujuan}
+                      </td>
+                      <td className="py-3 px-3 border-r border-slate-200 align-top">
+                        <strong className="text-slate-900">{row.sasaranStrategis}</strong>
+                        <p className="text-[10px] text-slate-500 mt-1">{row.sasaranCatatan}</p>
+                      </td>
+                      <td className="py-3 px-3 space-y-2 align-top">
+                        {row.programList.map((prog, pIdx) => {
+                          const colors = [
+                            'bg-blue-50/70 border-blue-200 text-blue-900',
+                            'bg-emerald-50/70 border-emerald-200 text-emerald-900',
+                            'bg-purple-50/70 border-purple-200 text-purple-900',
+                            'bg-amber-50/70 border-amber-200 text-amber-900',
+                          ];
+                          const color = colors[pIdx % colors.length];
+                          return (
+                            <div key={prog.id || pIdx} className={`p-2 rounded border ${color}`}>
+                              <strong>{prog.kode}: {prog.nama}</strong>
+                              <p className="text-[10px] text-slate-700 mt-0.5">• Indikator: {prog.indikator}</p>
+                            </div>
+                          );
+                        })}
+                      </td>
+                      {isAdmin && (
+                        <td className="py-3 px-3 text-center align-top">
+                          <div className="flex flex-col items-center gap-1.5">
+                            <button
+                              onClick={() => handleOpenEdit1b4(row)}
+                              className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                              title="Edit Pohon Kinerja"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete1b4(row.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                              title="Hapus Pohon Kinerja"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -1011,18 +1800,37 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
       {/* TAB 8: KKE 1.b.5 (Matriks Penyelarasan) */}
       {activeSubTab === 'kke-1b5' && (
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
             <div>
               <h3 className="text-base font-bold text-slate-900">
                 KKE 1.b.5 - Matriks Penyelarasan Sasaran, Indikator, dan Anggaran
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Keselarasan antara Renstra, Renja, DPA, dan Perjanjian Kinerja
               </p>
             </div>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenAdd1b5}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Baris Matriks</span>
+                </button>
+                <button
+                  onClick={handleReset1b5}
+                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs flex items-center gap-1"
+                  title="Kembalikan ke data standar"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Reset Default</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
+          <div className="border border-slate-200 rounded-xl overflow-x-auto text-xs">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-100 font-bold text-slate-700 border-b border-slate-200 text-[11px]">
@@ -1031,30 +1839,39 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
                   <th className="py-2.5 px-3 text-right">Target</th>
                   <th className="py-2.5 px-3">Program / Kegiatan Terkait</th>
                   <th className="py-2.5 px-3">Unit Pelaksana</th>
+                  {isAdmin && <th className="py-2.5 px-3 w-16 text-center">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
-                <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Meningkatnya Kesiapan Tenaga Kerja</td>
-                  <td className="py-2.5 px-3">Persentase naker terlatih bersertifikasi</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold">59.06%</td>
-                  <td className="py-2.5 px-3">Program Pelatihan Kerja & Produktivitas</td>
-                  <td className="py-2.5 px-3">UPTD BLK</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Perlindungan Pekerja Rentan</td>
-                  <td className="py-2.5 px-3">Persentase pekerja bukan penerima upah terproteksi</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold">40.00%</td>
-                  <td className="py-2.5 px-3">Program Hubungan Industrial</td>
-                  <td className="py-2.5 px-3">Bidang Hubungan Industrial</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">Kemandirian Warga Transmigrasi</td>
-                  <td className="py-2.5 px-3">Persentase transmigran dibina dan diberdayakan</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold">11.49%</td>
-                  <td className="py-2.5 px-3">Program Pengembangan Kawasan Transmigrasi</td>
-                  <td className="py-2.5 px-3">Bidang Pengembangan Kawasan Tranmigrasi</td>
-                </tr>
+                {kke1b5List.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3 font-semibold text-slate-900">{row.sasaranStrategis}</td>
+                    <td className="py-2.5 px-3">{row.indikatorKinerjaUtama}</td>
+                    <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-900">{row.target}</td>
+                    <td className="py-2.5 px-3">{row.programKegiatan}</td>
+                    <td className="py-2.5 px-3 font-medium text-slate-700">{row.unitPelaksana}</td>
+                    {isAdmin && (
+                      <td className="py-2.5 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => handleOpenEdit1b5(row)}
+                            className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                            title="Edit Matriks"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete1b5(row.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded"
+                            title="Hapus Matriks"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -1064,45 +1881,73 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
       {/* TAB 9: KKE 2.b.1 KUES */}
       {activeSubTab === 'kke-2b1' && (
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
             <div>
-              <h3 className="text-base font-bold text-slate-900">
-                KKE 2.b.1 Kues - Kuesioner Pengukuran Kinerja Berkala
-              </h3>
-              <p className="text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">
+                  KKE 2.b.1 Kues - Kuesioner Pengukuran Kinerja Berkala
+                </h3>
+                <span className="text-xs bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded">
+                  Skor: Terpenuhi
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
                 Instrumen Evaluasi Ketersediaan dan Mekanisme Pengukuran Data Triwulan
               </p>
             </div>
-            <span className="text-xs bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded">
-              Skor: 92% Terpenuhi
-            </span>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenAdd2b1}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Pertanyaan</span>
+                </button>
+                <button
+                  onClick={handleReset2b1}
+                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs flex items-center gap-1"
+                  title="Kembalikan ke data standar"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Reset Default</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-3 text-xs">
-            {[
-              {
-                q: 'Apakah dinas menyusun jadwal berkala pengumpulan data capaian kinerja dari setiap bidang?',
-                status: 'Ya, setiap akhir triwulan melalui aplikasi LAPAK KINERJA',
-                skor: 'A (Sangat Baik)',
-              },
-              {
-                q: 'Apakah data realisasi capaian diverifikasi dengan bukti dukung yang valid sebelum dilaporkan?',
-                status: 'Ya, diverifikasi oleh Kasubag Perencanaan dan disetujui Kepala Dinas',
-                skor: 'A (Sangat Baik)',
-              },
-              {
-                q: 'Apakah terdapat manual indikator kinerja yang menjelaskan definisi dan tata cara perhitungan?',
-                status: 'Tersedia lengkap pada lampiran Keputusan Kadis tentang IKU',
-                skor: 'A (Sangat Baik)',
-              },
-            ].map((kues, idx) => (
-              <div key={idx} className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 space-y-1">
-                <p className="font-semibold text-slate-900">
-                  {idx + 1}. {kues.q}
-                </p>
-                <div className="flex items-center justify-between pt-1 text-[11px]">
+            {kke2b1List.map((kues, idx) => (
+              <div
+                key={kues.id}
+                className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/60 hover:border-blue-200 transition-all space-y-1.5 shadow-2xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-semibold text-slate-900">
+                    {idx + 1}. {kues.q}
+                  </p>
+                  {isAdmin && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleOpenEdit2b1(kues)}
+                        className="p-1 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                        title="Edit kuesioner ini"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete2b1(kues.id)}
+                        className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded"
+                        title="Hapus kuesioner ini"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
                   <span className="text-slate-600">Catatan: {kues.status}</span>
-                  <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                  <span className="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
                     {kues.skor}
                   </span>
                 </div>
@@ -1115,40 +1960,78 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
       {/* TAB 10: KKE 2.c.1 KUES */}
       {activeSubTab === 'kke-2c1' && (
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
             <div>
-              <h3 className="text-base font-bold text-slate-900">
-                KKE 2.c.1 Kues - Kuesioner Pemanfaatan Data Kinerja
-              </h3>
-              <p className="text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">
+                  KKE 2.c.1 Kues - Kuesioner Pemanfaatan Data Kinerja
+                </h3>
+                <span className="text-xs bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded">
+                  Skor: Terpenuhi
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
                 Pemanfaatan Capaian Kinerja dalam Pengambilan Kebijakan dan Evaluasi Program
               </p>
             </div>
-            <span className="text-xs bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded">
-              Skor: 88% Terpenuhi
-            </span>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenAdd2c1}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Pertanyaan</span>
+                </button>
+                <button
+                  onClick={handleReset2c1}
+                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs flex items-center gap-1"
+                  title="Kembalikan ke data standar"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Reset Default</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-3 text-xs">
-            {[
-              {
-                q: 'Apakah hasil capaian kinerja digunakan sebagai bahan penyusunan dokumen perencanaan tahun berikutnya?',
-                status: 'Ya, menjadi baseline perumusan target Renja 2027',
-              },
-              {
-                q: 'Apakah pimpinan unit kerja memberikan arahan perbaikan terhadap indikator yang belum mencapai target?',
-                status: 'Ya, tertuang dalam notulen rapat monev pimpinan triwulan 2 dan 3',
-              },
-              {
-                q: 'Apakah data kinerja dipublikasikan kepada masyarakat untuk akuntabilitas publik?',
-                status: 'Ya, melalui website resmi www.luwuutarakab.go.id dan papan pengumuman kantor',
-              },
-            ].map((kues, idx) => (
-              <div key={idx} className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 space-y-1">
-                <p className="font-semibold text-slate-900">
-                  {idx + 1}. {kues.q}
-                </p>
-                <p className="text-[11px] text-slate-600">Tindak Lanjut: {kues.status}</p>
+            {kke2c1List.map((kues, idx) => (
+              <div
+                key={kues.id}
+                className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/60 hover:border-blue-200 transition-all space-y-1.5 shadow-2xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-semibold text-slate-900">
+                    {idx + 1}. {kues.q}
+                  </p>
+                  {isAdmin && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleOpenEdit2c1(kues)}
+                        className="p-1 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                        title="Edit kuesioner ini"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete2c1(kues.id)}
+                        className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded"
+                        title="Hapus kuesioner ini"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
+                  <span className="text-slate-600">Tindak Lanjut / Status: {kues.status}</span>
+                  {kues.skor && (
+                    <span className="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                      {kues.skor}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -1506,6 +2389,736 @@ export const DataLKEView: React.FC<DataLKEViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsComponentModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== 7 KKE MODALS FOR ADMINISTRATOR ==================== */}
+
+      {/* 1. MODAL: KKE PD */}
+      {isKKEPDModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 text-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {editingKKEPD ? 'Edit Butir KKE Perangkat Daerah' : 'Tambah Butir KKE Perangkat Daerah'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Format Lembar Kerja Evaluasi Mandiri SAKIP Luwu Utara
+                </p>
+              </div>
+              <button
+                onClick={() => setIsKKEPDModalOpen(false)}
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveKKEPDForm} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Sub-Komponen <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={kkePDFormData.sub || ''}
+                    onChange={(e) => setKkePDFormData({ ...kkePDFormData, sub: e.target.value })}
+                    placeholder="Contoh: 1.a Dokumen / 1.b Cascading / 2.a SOP"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Jawaban Evaluasi <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={kkePDFormData.ans || 'Ya'}
+                    onChange={(e) => setKkePDFormData({ ...kkePDFormData, ans: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-semibold"
+                  >
+                    <option value="Ya">Ya</option>
+                    <option value="Tidak">Tidak</option>
+                    <option value="Ada dan Berkualitas">Ada dan Berkualitas</option>
+                    <option value="Sebagian">Sebagian</option>
+                    <option value="A">A</option>
+                    <option value="BB">BB</option>
+                    <option value="B">B</option>
+                    <option value="CC">CC</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Pertanyaan Evaluasi / Kriteria Pemenuhan <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={kkePDFormData.q || ''}
+                  onChange={(e) => setKkePDFormData({ ...kkePDFormData, q: e.target.value })}
+                  placeholder="Deskripsi pertanyaan atau kriteria pemenuhan instrumen evaluasi..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Link Evidence (URL Google Drive / Peraturan / Berkas)
+                </label>
+                <div className="relative">
+                  <LinkIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={kkePDFormData.link || ''}
+                    onChange={(e) => setKkePDFormData({ ...kkePDFormData, link: e.target.value })}
+                    placeholder="https://drive.google.com/file/d/..."
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Catatan Keterangan / Analisis
+                </label>
+                <input
+                  type="text"
+                  value={kkePDFormData.catatan || ''}
+                  onChange={(e) => setKkePDFormData({ ...kkePDFormData, catatan: e.target.value })}
+                  placeholder="Catatan verifikasi atau tindak lanjut..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsKKEPDModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                >
+                  {editingKKEPD ? 'Simpan Perubahan' : 'Tambahkan Butir'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. MODAL: KKE JUKNIS */}
+      {isJuknisModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 text-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {isEditingJuknisTujuan
+                    ? 'Edit Tujuan Petunjuk Teknis'
+                    : editingJuknisItem
+                    ? 'Edit Butir Petunjuk Teknis'
+                    : 'Tambah Butir Petunjuk Teknis'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Pedoman Pengisian KKE Dinas Transmigrasi dan Tenaga Kerja
+                </p>
+              </div>
+              <button
+                onClick={() => setIsJuknisModalOpen(false)}
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveJuknisForm} className="p-6 space-y-4">
+              {isEditingJuknisTujuan ? (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Tujuan Petunjuk Teknis <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={juknisFormData.tujuan}
+                    onChange={(e) => setJuknisFormData({ ...juknisFormData, tujuan: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 leading-relaxed"
+                    required
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="col-span-1">
+                      <label className="block font-semibold text-slate-700 mb-1">Nomor</label>
+                      <input
+                        type="number"
+                        value={juknisFormData.nomor}
+                        onChange={(e) => setJuknisFormData({ ...juknisFormData, nomor: parseInt(e.target.value) || 1 })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-bold"
+                        required
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Judul Poin Juknis <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={juknisFormData.judul}
+                        onChange={(e) => setJuknisFormData({ ...juknisFormData, judul: e.target.value })}
+                        placeholder="Contoh: Verifikasi Ketersediaan Dokumen"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-bold"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Uraian Petunjuk Teknis <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={juknisFormData.uraian}
+                      onChange={(e) => setJuknisFormData({ ...juknisFormData, uraian: e.target.value })}
+                      placeholder="Petunjuk rinci untuk tim SAKIP dan operator..."
+                      rows={4}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 leading-relaxed"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsJuknisModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. MODAL: KKE PENJELASAN */}
+      {isPenjelasanModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 text-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {isEditingPengantar
+                    ? 'Edit Pengantar Penjelasan'
+                    : editingPenjelasanItem
+                    ? 'Edit Kartu Penjelasan Instrumen'
+                    : 'Tambah Kartu Penjelasan Baru'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Penjelasan Indikator Evaluator SAKIP Luwu Utara
+                </p>
+              </div>
+              <button
+                onClick={() => setIsPenjelasanModalOpen(false)}
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePenjelasanForm} className="p-6 space-y-4">
+              {isEditingPengantar ? (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Teks Pengantar Penjelasan <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={penjelasanFormData.pengantar}
+                    onChange={(e) => setPenjelasanFormData({ ...penjelasanFormData, pengantar: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 leading-relaxed"
+                    required
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Judul Kartu <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={penjelasanFormData.judul}
+                        onChange={(e) => setPenjelasanFormData({ ...penjelasanFormData, judul: e.target.value })}
+                        placeholder="Contoh: Kualitas Renstra & IKU"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-bold"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Kategori</label>
+                      <input
+                        type="text"
+                        value={penjelasanFormData.kategori}
+                        onChange={(e) => setPenjelasanFormData({ ...penjelasanFormData, kategori: e.target.value })}
+                        placeholder="Perencanaan / Pengukuran / dll"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Deskripsi Penjelasan <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={penjelasanFormData.deskripsi}
+                      onChange={(e) => setPenjelasanFormData({ ...penjelasanFormData, deskripsi: e.target.value })}
+                      placeholder="Penjelasan kriteria evaluasi dan standar kualitas..."
+                      rows={4}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 leading-relaxed"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPenjelasanModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MODAL: KKE 1.b.4 CASCADING */}
+      {is1b4ModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 text-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {editing1b4 ? 'Edit Pohon Kinerja Cascading (KKE 1.b.4)' : 'Tambah Baris Pohon Kinerja Cascading'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Keterkaitan Tujuan, Indikator, Sasaran Strategis, dan Program
+                </p>
+              </div>
+              <button
+                onClick={() => setIs1b4ModalOpen(false)}
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSave1b4Form} className="p-6 space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <div className="col-span-1">
+                  <label className="block font-semibold text-slate-700 mb-1">Kode Tujuan</label>
+                  <input
+                    type="text"
+                    value={formData1b4.tujuanKode}
+                    onChange={(e) => setFormData1b4({ ...formData1b4, tujuanKode: e.target.value })}
+                    placeholder="T1"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-bold"
+                    required
+                  />
+                </div>
+                <div className="col-span-3">
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Nama Tujuan <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData1b4.tujuanNama}
+                    onChange={(e) => setFormData1b4({ ...formData1b4, tujuanNama: e.target.value })}
+                    placeholder="Meningkatkan Kualitas Pembangunan Manusia..."
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-semibold"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Catatan Keselarasan Tujuan</label>
+                <input
+                  type="text"
+                  value={formData1b4.tujuanCatatan}
+                  onChange={(e) => setFormData1b4({ ...formData1b4, tujuanCatatan: e.target.value })}
+                  placeholder="Selaras Renstra, Renja, Pohon Kinerja & Cascading"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Indikator Tujuan <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData1b4.indikatorTujuan}
+                  onChange={(e) => setFormData1b4({ ...formData1b4, indikatorTujuan: e.target.value })}
+                  placeholder="Contoh: Indeks Pembangunan Manusia (IPM)"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-bold text-blue-900"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Sasaran Strategis <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={formData1b4.sasaranStrategis}
+                  onChange={(e) => setFormData1b4({ ...formData1b4, sasaranStrategis: e.target.value })}
+                  placeholder="Rumusan sasaran strategis kepala dinas..."
+                  rows={2}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-medium"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Catatan / Indikator Sasaran</label>
+                <input
+                  type="text"
+                  value={formData1b4.sasaranCatatan}
+                  onChange={(e) => setFormData1b4({ ...formData1b4, sasaranCatatan: e.target.value })}
+                  placeholder="Indikator Makro: Pertumbuhan Ekonomi & TPT"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                  <span>Daftar Program & Indikator (1 Baris = 1 Program)</span>
+                  <span className="text-[10px] text-blue-600 font-normal">Format: Kode: Nama Program | Indikator: Uraian</span>
+                </label>
+                <textarea
+                  value={formData1b4.programRawText}
+                  onChange={(e) => setFormData1b4({ ...formData1b4, programRawText: e.target.value })}
+                  placeholder="p1: Program Pelatihan Kerja | Indikator: Tingkat Produktivitas Tenaga Kerja&#10;p2: Program Penempatan Tenaga Kerja | Indikator: Persentase Naker Ditempatkan"
+                  rows={4}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-mono text-[11px] leading-relaxed"
+                  required
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIs1b4ModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. MODAL: KKE 1.b.5 MATRIKS PENYELARASAN */}
+      {is1b5ModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 text-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {editing1b5 ? 'Edit Baris Matriks Penyelarasan (KKE 1.b.5)' : 'Tambah Baris Matriks Penyelarasan'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Penyelarasan Sasaran, Indikator, dan Anggaran SAKIP
+                </p>
+              </div>
+              <button
+                onClick={() => setIs1b5ModalOpen(false)}
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSave1b5Form} className="p-6 space-y-4">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Sasaran Strategis <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData1b5.sasaranStrategis || ''}
+                  onChange={(e) => setFormData1b5({ ...formData1b5, sasaranStrategis: e.target.value })}
+                  placeholder="Meningkatnya Kesiapan Tenaga Kerja..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-semibold"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Indikator Kinerja Utama (IKU) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData1b5.indikatorKinerjaUtama || ''}
+                  onChange={(e) => setFormData1b5({ ...formData1b5, indikatorKinerjaUtama: e.target.value })}
+                  placeholder="Persentase naker terlatih bersertifikasi"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Target Angka / Satuan</label>
+                  <input
+                    type="text"
+                    value={formData1b5.target || ''}
+                    onChange={(e) => setFormData1b5({ ...formData1b5, target: e.target.value })}
+                    placeholder="Contoh: 59.06%"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Unit Pelaksana</label>
+                  <input
+                    type="text"
+                    value={formData1b5.unitPelaksana || ''}
+                    onChange={(e) => setFormData1b5({ ...formData1b5, unitPelaksana: e.target.value })}
+                    placeholder="UPTD BLK / Bidang PTK"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Program / Kegiatan Terkait</label>
+                <input
+                  type="text"
+                  value={formData1b5.programKegiatan || ''}
+                  onChange={(e) => setFormData1b5({ ...formData1b5, programKegiatan: e.target.value })}
+                  placeholder="Program Pelatihan Kerja & Produktivitas"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIs1b5ModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. MODAL: KKE 2.b.1 KUES */}
+      {is2b1ModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 text-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {editing2b1 ? 'Edit Pertanyaan Kuesioner (KKE 2.b.1)' : 'Tambah Pertanyaan Kuesioner'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Pengukuran Kinerja Berkala Triwulan Dinas Transnaker
+                </p>
+              </div>
+              <button
+                onClick={() => setIs2b1ModalOpen(false)}
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSave2b1Form} className="p-6 space-y-4">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Pertanyaan Evaluasi Kuesioner <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={formData2b1.q || ''}
+                  onChange={(e) => setFormData2b1({ ...formData2b1, q: e.target.value })}
+                  placeholder="Apakah dinas memiliki sistem repositori digital..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Catatan / Keterangan Realisasi <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={formData2b1.status || ''}
+                  onChange={(e) => setFormData2b1({ ...formData2b1, status: e.target.value })}
+                  placeholder="Ya, diverifikasi oleh Kasubag Perencanaan..."
+                  rows={2}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Skor Penilaian</label>
+                <input
+                  type="text"
+                  value={formData2b1.skor || ''}
+                  onChange={(e) => setFormData2b1({ ...formData2b1, skor: e.target.value })}
+                  placeholder="A (Sangat Baik) / BB (Baik) / dll"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-bold text-emerald-800"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIs2b1ModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. MODAL: KKE 2.c.1 KUES */}
+      {is2c1ModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 text-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {editing2c1 ? 'Edit Pertanyaan Pemanfaatan (KKE 2.c.1)' : 'Tambah Pertanyaan Pemanfaatan'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Pemanfaatan Capaian Kinerja dalam Pengambilan Kebijakan
+                </p>
+              </div>
+              <button
+                onClick={() => setIs2c1ModalOpen(false)}
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSave2c1Form} className="p-6 space-y-4">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Pertanyaan Evaluasi Pemanfaatan <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={formData2c1.q || ''}
+                  onChange={(e) => setFormData2c1({ ...formData2c1, q: e.target.value })}
+                  placeholder="Apakah hasil capaian kinerja digunakan sebagai bahan penyusunan..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Tindak Lanjut / Status Pemanfaatan <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={formData2c1.status || ''}
+                  onChange={(e) => setFormData2c1({ ...formData2c1, status: e.target.value })}
+                  placeholder="Ya, menjadi baseline perumusan target Renja..."
+                  rows={2}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Skor / Tingkat Kematangan</label>
+                <input
+                  type="text"
+                  value={formData2c1.skor || ''}
+                  onChange={(e) => setFormData2c1({ ...formData2c1, skor: e.target.value })}
+                  placeholder="A (Sangat Baik) / BB (Baik)"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-bold text-emerald-800"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIs2c1ModalOpen(false)}
                   className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100"
                 >
                   Batal
