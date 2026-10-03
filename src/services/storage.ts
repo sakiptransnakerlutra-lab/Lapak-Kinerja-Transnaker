@@ -101,7 +101,41 @@ export const StorageService = {
       return INITIAL_USERS;
     }
     try {
-      return JSON.parse(data);
+      const parsed: User[] = JSON.parse(data);
+      let modified = false;
+      let hasAdmin = false;
+
+      const updated = parsed.map((u) => {
+        if (u.role === 'admin') {
+          hasAdmin = true;
+          if (u.email !== 'sakip.transnakerlutra@gmail.com' || u.password !== 'Admin12345') {
+            modified = true;
+            return {
+              ...u,
+              name: 'Administrator SAKIP',
+              email: 'sakip.transnakerlutra@gmail.com',
+              password: 'Admin12345',
+            };
+          }
+        } else if (!u.password) {
+          modified = true;
+          return {
+            ...u,
+            password: 'Operator123',
+          };
+        }
+        return u;
+      });
+
+      if (!hasAdmin) {
+        updated.unshift(INITIAL_USERS[0]);
+        modified = true;
+      }
+
+      if (modified) {
+        safeStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated));
+      }
+      return updated;
     } catch {
       return INITIAL_USERS;
     }
@@ -119,7 +153,13 @@ export const StorageService = {
       return defaultUser;
     }
     try {
-      return JSON.parse(data);
+      const user: User = JSON.parse(data);
+      if (user.role === 'admin' && (user.email !== 'sakip.transnakerlutra@gmail.com' || user.password !== 'Admin12345')) {
+        const updatedAdmin = { ...user, name: 'Administrator SAKIP', email: 'sakip.transnakerlutra@gmail.com', password: 'Admin12345' };
+        safeStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedAdmin));
+        return updatedAdmin;
+      }
+      return user;
     } catch {
       return INITIAL_USERS[0];
     }
@@ -127,6 +167,15 @@ export const StorageService = {
 
   setCurrentUser(user: User) {
     safeStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+  },
+
+  getIsLoggedIn(): boolean {
+    const data = safeStorage.getItem('lapak_kinerja_is_logged_in_v2');
+    return data !== null ? data === 'true' : true;
+  },
+
+  setIsLoggedIn(status: boolean) {
+    safeStorage.setItem('lapak_kinerja_is_logged_in_v2', status ? 'true' : 'false');
   },
 
   getCapaianKinerja(): CapaianKinerjaItem[] {

@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import {
   Lock,
-  Mail,
   User as UserIcon,
-  ShieldCheck,
-  Building,
+  Key,
   ArrowRight,
-  Award,
-  CheckCircle2,
-  AlertCircle,
+  ShieldCheck,
   FileText,
+  Building2,
+  Eye,
+  EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 import { User } from '../types/sakip';
 import logoLuwuUtara from '../assets/logo_luwu_utara.png';
@@ -17,31 +17,59 @@ import logoLuwuUtara from '../assets/logo_luwu_utara.png';
 interface LoginViewProps {
   onLoginSuccess: (user: User) => void;
   allUsers: User[];
-  onRegister: (newUser: User) => void;
+  onRegister?: (newUser: User) => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
   allUsers,
-  onRegister,
 }) => {
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [email, setEmail] = useState('');
+  const [userIdOrEmail, setUserIdOrEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [unit, setUnit] = useState('Bidang Pemberdayaan Tenaga Kerja');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    const targetUser = allUsers.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase().trim()
+    const cleanInput = userIdOrEmail.toLowerCase().trim();
+
+    // Find user by direct email or ID or friendly alias
+    let targetUser = allUsers.find(
+      (u) =>
+        u.email.toLowerCase().trim() === cleanInput ||
+        u.id.toLowerCase() === cleanInput
     );
 
     if (!targetUser) {
-      setErrorMsg('Email tidak terdaftar dalam sistem LAPAK KINERJA.');
+      if (cleanInput === 'admin' || cleanInput === 'admin sakip' || cleanInput === 'administrator') {
+        targetUser =
+          allUsers.find((u) => u.email === 'sakip.transnakerlutra@gmail.com') ||
+          allUsers.find((u) => u.role === 'admin');
+      } else if (cleanInput === 'op_ptk' || cleanInput === 'operator_ptk' || cleanInput === 'ptk') {
+        targetUser = allUsers.find(
+          (u) => u.email.includes('ptk') || u.unit.toLowerCase().includes('pemberdayaan')
+        );
+      } else if (cleanInput === 'op_hi' || cleanInput === 'operator_hi' || cleanInput === 'hi') {
+        targetUser = allUsers.find(
+          (u) => u.email.includes('hi') || u.unit.toLowerCase().includes('industrial')
+        );
+      } else if (cleanInput === 'op_trans' || cleanInput === 'trans') {
+        targetUser = allUsers.find(
+          (u) => (u.email.includes('trans') && u.role === 'operator') || u.unit.toLowerCase().includes('tranmigrasi')
+        );
+      } else if (cleanInput === 'op_blk' || cleanInput === 'blk') {
+        targetUser = allUsers.find(
+          (u) => u.email.includes('blk') || u.unit.toLowerCase().includes('blk')
+        );
+      } else if (cleanInput === 'op_sekretariat' || cleanInput === 'sekretariat') {
+        targetUser = allUsers.find((u) => u.unit.toLowerCase().includes('sekretariat'));
+      }
+    }
+
+    if (!targetUser) {
+      setErrorMsg('User ID atau Email tidak terdaftar dalam sistem LAPAK KINERJA.');
       return;
     }
 
@@ -50,257 +78,227 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return;
     }
 
+    // Verify Password
+    const validPassword =
+      targetUser.password ||
+      (targetUser.role === 'admin' ? 'Admin12345' : 'Operator123');
+
+    if (password !== validPassword) {
+      setErrorMsg('Kata sandi yang Anda masukkan salah. Hubungi Administrator SAKIP.');
+      return;
+    }
+
     onLoginSuccess(targetUser);
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg(null);
-
-    if (!name || !email) {
-      setErrorMsg('Harap lengkapi semua kolom.');
-      return;
-    }
-
-    const existing = allUsers.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase().trim()
-    );
-    if (existing) {
-      setErrorMsg('Email tersebut sudah terdaftar.');
-      return;
-    }
-
-    const newUser: User = {
-      id: 'usr-' + Date.now(),
-      name,
-      email: email.trim(),
-      role: 'operator',
-      unit,
-      isActive: true,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-
-    onRegister(newUser);
-    onLoginSuccess(newUser);
-  };
-
-  const handleQuickLogin = (targetEmail: string) => {
-    const user = allUsers.find((u) => u.email === targetEmail);
-    if (user) {
-      onLoginSuccess(user);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 -right-20 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#070d18] text-slate-200 flex items-center justify-center p-4 sm:p-6 lg:p-12 relative overflow-hidden font-sans selection:bg-blue-600 selection:text-white">
+      {/* Background radial gradient overlay matching the uploaded image */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,33,65,0.45)_0%,rgba(7,13,24,0.95)_70%,#070d18_100%)] pointer-events-none" />
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        {/* Logo Asli Luwu Utara yang diunggah */}
-        <div className="mx-auto flex items-center justify-center mb-4">
-          <img
-            src={logoLuwuUtara}
-            alt="Logo Kabupaten Luwu Utara"
-            className="h-20 w-auto object-contain filter-none drop-shadow-lg"
-          />
-        </div>
-
-        <div className="flex items-center justify-center gap-2">
-          <h1 className="text-2xl font-black tracking-tight text-white">LAPAK KINERJA</h1>
-          <span className="bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded uppercase">
-            SAKIP
-          </span>
-        </div>
-        <p className="text-xs text-blue-200 mt-1 font-medium">
-          Layanan Pemantauan dan Akses Data Dukung Evaluasi Akuntabilitas Kinerja
-        </p>
-        <p className="text-[11px] text-slate-400 mt-0.5">
-          Dinas Transmigrasi dan Tenaga Kerja Kabupaten Luwu Utara
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-white py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-slate-200">
-          <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
-                {isRegisterMode ? 'Daftar Akun Operator' : 'Masuk ke Sistem'}
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                {isRegisterMode
-                  ? 'Isi formulir untuk pendaftaran operator bidang'
-                  : 'Gunakan email dan kata sandi kedinasan'}
-              </p>
+      {/* Main Two-Column Layout */}
+      <div className="relative z-10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+        {/* Left Side: Branding, Tagline, Feature Cards, 5 Integrated Units */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Top Pill Badge */}
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0d1d36]/80 border border-blue-500/30 text-blue-400 text-xs font-medium shadow-xs">
+              <Building2 className="w-3.5 h-3.5 text-blue-400" />
+              <span>Pemerintah Kabupaten Luwu Utara</span>
             </div>
-            <button
-              onClick={() => {
-                setIsRegisterMode(!isRegisterMode);
-                setErrorMsg(null);
-              }}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-800"
-            >
-              {isRegisterMode ? 'Sudah punya akun? Masuk' : 'Daftar Baru'}
-            </button>
           </div>
 
-          {errorMsg && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-600" />
-              <span>{errorMsg}</span>
+          {/* Logo & Application Title */}
+          <div className="flex items-center gap-3.5">
+            <img
+              src={logoLuwuUtara}
+              alt="Logo Kabupaten Luwu Utara"
+              className="w-12 h-14 sm:w-14 sm:h-16 object-contain filter-none drop-shadow-lg"
+            />
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wide leading-none uppercase">
+                LAPAK KINERJA
+              </h1>
+              <p className="text-xs sm:text-sm font-semibold text-blue-400 mt-1">
+                Dinas Transmigrasi dan Tenaga Kerja Kabupaten Luwu Utara
+              </p>
             </div>
-          )}
+          </div>
 
-          {!isRegisterMode ? (
-            /* Login Form */
-            <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+          {/* Quotation / Tagline with Left Blue Line */}
+          <div className="border-l-2 border-blue-500 pl-3.5 py-0.5 space-y-1">
+            <p className="text-sm font-bold text-white leading-snug">
+              “Layanan Pemantauan dan Akses Data Dukung Evaluasi Akuntabilitas Kinerja”
+            </p>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-xl">
+              Aplikasi Pengelolaan Sistem Akuntabilitas Kinerja Instansi Pemerintah (SAKIP) yang terintegrasi untuk menyimpan, mengelola, mencari, dan mengarsipkan data dukung kinerja dinas.
+            </p>
+          </div>
+
+          {/* Two Feature Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="bg-[#0b1527] border border-slate-800 rounded-xl p-3.5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                <h3 className="text-xs font-bold text-white">Kepatuhan SAKIP</h3>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                PermenPAN-RB No 88 & 89 tentang evaluasi akuntabilitas kinerja instansi pemerintah.
+              </p>
+            </div>
+
+            <div className="bg-[#0b1527] border border-slate-800 rounded-xl p-3.5">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <h3 className="text-xs font-bold text-white">8 Dokumen Wajib</h3>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                Penyimpanan terpadu Renstra, IKU, Renja, Perjanjian Kinerja, LKjIP, Renaksi, Monev, SOP.
+              </p>
+            </div>
+          </div>
+
+          {/* 5 Bidang / Unit Kerja Terintegrasi */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              5 BIDANG / UNIT KERJA TERINTEGRASI:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="bg-[#0b1527] border border-slate-800 rounded-lg p-2.5">
+                <p className="font-bold text-white text-xs">Sekretariat</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Sekretariat Dinas</p>
+              </div>
+
+              <div className="bg-[#0b1527] border border-slate-800 rounded-lg p-2.5">
+                <p className="font-bold text-white text-xs">Bidang Pemberdayaan TK</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Bidang Pemberdayaan Tenaga Kerja</p>
+              </div>
+
+              <div className="bg-[#0b1527] border border-slate-800 rounded-lg p-2.5">
+                <p className="font-bold text-white text-xs">Bidang HI</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Bidang Hubungan Industrial</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="bg-[#0b1527] border border-slate-800 rounded-lg p-2.5">
+                <p className="font-bold text-white text-xs">Bidang Penyiapan Kawasan</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                  Bidang Penyiapan dan Pembangunan Kawasan Transmigrasi
+                </p>
+              </div>
+
+              <div className="bg-[#0b1527] border border-slate-800 rounded-lg p-2.5">
+                <p className="font-bold text-white text-xs">Bidang Pengembangan Kawasan</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                  Bidang Pengembangan Kawasan Transmigrasi
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Login Card */}
+        <div className="lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none">
+          <div className="bg-[#0d182b] border border-slate-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl relative">
+            {/* Header of Login Card */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-950/90 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0 shadow-inner">
+                <Lock className="w-5 h-5" />
+              </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Email Kedinasan</label>
+                <h2 className="text-base sm:text-lg font-bold text-white">Masuk ke Sistem</h2>
+                <p className="text-xs text-slate-400">Gunakan User ID atau Email Kedinasan Anda</p>
+              </div>
+            </div>
+
+            {/* Akses Akun Terpusat Box */}
+            <div className="bg-blue-950/30 border border-blue-500/40 rounded-xl p-3.5 my-5 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-white">Akses Akun Terpusat</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
+                  Akun operator dibuat dan dikelola secara terpusat oleh{' '}
+                  <strong className="text-white font-semibold">Administrator SAKIP</strong>. Hubungi Admin dinas jika Anda memerlukan akses baru.
+                </p>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-500/40 text-xs text-red-300 flex items-start gap-2 animate-fadeIn">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400 mt-0.5" />
+                <span className="leading-relaxed">{errorMsg}</span>
+              </div>
+            )}
+
+            {/* Login Form */}
+            <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+              {/* Field 1: User ID / Email Kedinasan */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-semibold text-slate-200">
+                    User ID / Email Kedinasan
+                  </label>
+                  <span className="text-[11px] text-slate-400">
+                    Contoh: admin atau op_ptk
+                  </span>
+                </div>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@transnaker-lutra.go.id"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    type="text"
+                    value={userIdOrEmail}
+                    onChange={(e) => setUserIdOrEmail(e.target.value)}
+                    placeholder="Masukkan User ID atau Email"
+                    className="w-full pl-10 pr-3 py-2.5 bg-[#08101e] border border-slate-700/80 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-xs"
                     required
+                    autoComplete="username"
                   />
                 </div>
               </div>
 
+              {/* Field 2: Kata Sandi (Password) */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Kata Sandi</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-semibold text-slate-200">
+                    Kata Sandi (Password)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    <span>{showPassword ? 'Sembunyikan' : 'Tampilkan'}</span>
+                  </button>
+                </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Key className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Masukkan kata sandi"
+                    className="w-full pl-10 pr-3 py-2.5 bg-[#08101e] border border-slate-700/80 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-xs"
                     required
+                    autoComplete="current-password"
                   />
                 </div>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-xs"
+                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all mt-6 text-xs cursor-pointer"
               >
-                <span>Masuk Sekarang</span>
+                <span>Masuk ke Sistem LAPAK KINERJA</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
-          ) : (
-            /* Register Form */
-            <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nama Lengkap & Gelar</label>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Contoh: Muh. Firman, S.STP"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Email</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="operator@transnaker-lutra.go.id"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Bidang / Unit Kerja</label>
-                <select
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
-                >
-                  <option value="Bidang Pemberdayaan Tenaga Kerja">Bidang Pemberdayaan Tenaga Kerja</option>
-                  <option value="Bidang Hubungan Industrial">Bidang Hubungan Industrial</option>
-                  <option value="Bidang Pengembangan Kawasan Tranmigrasi">Bidang Pengembangan Kawasan Tranmigrasi</option>
-                  <option value="UPTD BLK">UPTD BLK</option>
-                  <option value="Sekretariat">Sekretariat / Subag Perencanaan</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Kata Sandi</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimal 6 karakter"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
-                    required
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md transition-colors text-xs"
-              >
-                Daftar Akun Operator
-              </button>
-            </form>
-          )}
-
-          {/* Quick Demo Access Bar */}
-          <div className="mt-6 pt-5 border-t border-slate-200">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2.5">
-              Akses Cepat (Demo / Uji Coba)
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@transnaker-lutra.go.id')}
-                className="p-2 border border-blue-200 bg-blue-50/70 hover:bg-blue-100 rounded-lg text-left transition-colors text-blue-900"
-              >
-                <div className="flex items-center gap-1 font-bold">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
-                  <span>Admin SAKIP</span>
-                </div>
-                <p className="text-[10px] text-blue-600 mt-0.5">Akses Kelola & Hapus Penuh</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('operator.ptk@transnaker-lutra.go.id')}
-                className="p-2 border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 rounded-lg text-left transition-colors text-emerald-900"
-              >
-                <div className="flex items-center gap-1 font-bold">
-                  <UserIcon className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>Operator PTK</span>
-                </div>
-                <p className="text-[10px] text-emerald-600 mt-0.5">Akses Input & Edit Data</p>
-              </button>
-            </div>
           </div>
         </div>
-
-        <p className="text-center text-[11px] text-slate-400 mt-4">
-          © 2026 Pemerintah Kabupaten Luwu Utara • Dinas Transmigrasi dan Tenaga Kerja
-        </p>
       </div>
     </div>
   );

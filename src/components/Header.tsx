@@ -91,7 +91,10 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button
               onClick={() => {
-                const adminUser = allUsers.find((u) => u.role === 'admin') || allUsers[0];
+                const adminUser =
+                  allUsers.find((u) => u.email === 'sakip.transnakerlutra@gmail.com') ||
+                  allUsers.find((u) => u.role === 'admin') ||
+                  allUsers[0];
                 onSwitchUser(adminUser);
               }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-all ${

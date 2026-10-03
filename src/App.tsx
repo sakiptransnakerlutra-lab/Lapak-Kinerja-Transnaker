@@ -24,7 +24,7 @@ export default function App() {
   // Authentication & Users
   const [allUsers, setAllUsers] = useState<User[]>(() => StorageService.getUsers());
   const [currentUser, setCurrentUser] = useState<User>(() => StorageService.getCurrentUser());
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => StorageService.getIsLoggedIn());
 
   // Navigation
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard-capaian');
@@ -82,12 +82,14 @@ export default function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    StorageService.setIsLoggedIn(false);
   };
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
     StorageService.setCurrentUser(user);
     setIsLoggedIn(true);
+    StorageService.setIsLoggedIn(true);
   };
 
   const handleRegisterUser = (newUser: User) => {
