@@ -29,6 +29,7 @@ export default function App() {
   // Navigation
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard-capaian');
   const [activeLKETab, setActiveLKETab] = useState<LKETab>('penjelasan');
+  const [selectedDokumenKategori, setSelectedDokumenKategori] = useState<string>('Semua');
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = useState<boolean>(false);
 
   // Search & Print
@@ -139,6 +140,8 @@ export default function App() {
         onLogout={handleLogout}
         isOpenMobile={isSidebarOpenMobile}
         onCloseMobile={() => setIsSidebarOpenMobile(false)}
+        selectedDokumenKategori={selectedDokumenKategori}
+        onSelectDokumenKategori={setSelectedDokumenKategori}
       />
 
       {/* Main Content Area */}
@@ -205,6 +208,8 @@ export default function App() {
               currentUser={currentUser}
               onOpenPrintModal={() => setIsPrintModalOpen(true)}
               globalSearchQuery={globalSearchQuery}
+              selectedKategori={selectedDokumenKategori}
+              onSelectKategori={setSelectedDokumenKategori}
             />
           )}
 

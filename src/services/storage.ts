@@ -236,7 +236,35 @@ export const StorageService = {
       return INITIAL_DOKUMEN_SAKIP;
     }
     try {
-      return JSON.parse(data);
+      const parsed: DokumenSAKIPItem[] = JSON.parse(data);
+      let modified = false;
+
+      // Ensure every document has a valid, accessible URL
+      const updated = parsed.map((doc) => {
+        if (!doc.url || doc.url === '#' || doc.url.trim() === '') {
+          const match = INITIAL_DOKUMEN_SAKIP.find(
+            (d) => d.id === doc.id || d.kategori === doc.kategori
+          );
+          if (match && match.url) {
+            modified = true;
+            return { ...doc, url: match.url };
+          }
+        }
+        return doc;
+      });
+
+      // Ensure all official categories from INITIAL_DOKUMEN_SAKIP are present
+      for (const initDoc of INITIAL_DOKUMEN_SAKIP) {
+        if (!updated.some((d) => d.id === initDoc.id)) {
+          updated.push(initDoc);
+          modified = true;
+        }
+      }
+
+      if (modified) {
+        safeStorage.setItem(STORAGE_KEYS.DOKUMEN, JSON.stringify(updated));
+      }
+      return updated;
     } catch {
       return INITIAL_DOKUMEN_SAKIP;
     }

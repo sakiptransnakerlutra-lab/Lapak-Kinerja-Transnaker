@@ -13,6 +13,8 @@ import {
   FolderArchive,
   BarChart3,
   Award,
+  ExternalLink,
+  Link2,
 } from 'lucide-react';
 import { ActiveTab, LKETab, User } from '../types/sakip';
 import logoLuwuUtara from '../assets/logo_luwu_utara.png';
@@ -26,6 +28,8 @@ interface SidebarProps {
   onLogout: () => void;
   isOpenMobile: boolean;
   onCloseMobile: () => void;
+  selectedDokumenKategori?: string;
+  onSelectDokumenKategori?: (kategori: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -37,10 +41,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   isOpenMobile,
   onCloseMobile,
+  selectedDokumenKategori,
+  onSelectDokumenKategori,
 }) => {
   const [dashboardOpen, setDashboardOpen] = useState(true);
   const [evaluasiOpen, setEvaluasiOpen] = useState(true);
   const [dataLKEOpen, setDataLKEOpen] = useState(true);
+  const [dokumenOpen, setDokumenOpen] = useState(true);
 
   const isAdmin = currentUser.role === 'admin';
 
@@ -250,24 +257,88 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
 
-            {/* Menu: Dokumen SAKIP */}
+            {/* Menu: Dokumen SAKIP sebagai Kategori Link */}
             <div className="mt-2">
-              <button
-                onClick={() => handleNav('dokumen-sakip')}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium transition-colors ${
-                  activeTab === 'dokumen-sakip'
-                    ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <FileText className="w-4 h-4 text-purple-400" />
-                  <span className="font-semibold text-xs">Dokumen SAKIP</span>
+              <div className="flex items-center">
+                <button
+                  onClick={() => {
+                    handleNav('dokumen-sakip');
+                    if (onSelectDokumenKategori) onSelectDokumenKategori('Semua');
+                  }}
+                  className={`flex-1 flex items-center justify-between px-3 py-2 rounded-l-lg font-medium transition-colors ${
+                    activeTab === 'dokumen-sakip'
+                      ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FileText className="w-4 h-4 text-purple-400" />
+                    <span className="font-semibold text-xs">Dokumen SAKIP</span>
+                  </div>
+                  <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono border border-slate-700">
+                    Link/Drive
+                  </span>
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDokumenOpen(!dokumenOpen);
+                  }}
+                  className={`px-2 py-2 rounded-r-lg border-l border-slate-700/60 transition-colors ${
+                    activeTab === 'dokumen-sakip'
+                      ? 'bg-blue-700 text-white hover:bg-blue-800'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  title="Buka / Tutup Kategori Link SAKIP"
+                >
+                  {dokumenOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+
+              {dokumenOpen && (
+                <div className="pl-6 pr-1 space-y-0.5 border-l border-slate-700/50 ml-4 py-1.5 mt-1">
+                  {[
+                    { id: 'Semua', label: 'Semua Kategori Link' },
+                    { id: 'Renstra', label: 'Link Renstra' },
+                    { id: 'IKU', label: 'Link IKU' },
+                    { id: 'RKT / PK', label: 'Link RKT / PK' },
+                    { id: 'LKjIP', label: 'Link LKjIP' },
+                    { id: 'LHE AKIP', label: 'Link LHE AKIP' },
+                    { id: 'KKE / LKE', label: 'Link KKE / LKE' },
+                    { id: 'SOP & Kebijakan', label: 'Link SOP & Kebijakan' },
+                    { id: 'Bukti Dukung', label: 'Link Bukti Dukung' },
+                  ].map((sub) => {
+                    const isActive =
+                      activeTab === 'dokumen-sakip' &&
+                      (selectedDokumenKategori === sub.id ||
+                        (!selectedDokumenKategori && sub.id === 'Semua'));
+
+                    return (
+                      <button
+                        key={sub.id}
+                        onClick={() => {
+                          handleNav('dokumen-sakip');
+                          if (onSelectDokumenKategori) onSelectDokumenKategori(sub.id);
+                        }}
+                        className={`w-full text-left py-1 px-2 rounded text-[11px] transition-colors truncate flex items-center justify-between ${
+                          isActive
+                            ? 'bg-blue-600 text-white font-medium shadow-2xs'
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                        }`}
+                        title={sub.label}
+                      >
+                        <span className="truncate">• {sub.label}</span>
+                        <ExternalLink className="w-2.5 h-2.5 opacity-60 flex-shrink-0 ml-1" />
+                      </button>
+                    );
+                  })}
                 </div>
-                <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono border border-slate-700">
-                  XLSX/PDF
-                </span>
-              </button>
+              )}
             </div>
           </div>
 
