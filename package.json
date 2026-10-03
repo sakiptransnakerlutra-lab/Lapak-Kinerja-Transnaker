@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
-    "postbuild": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) { fs.copyFileSync('dist/index.html', 'dist/404.html'); fs.writeFileSync('dist/.nojekyll', ''); }\"",
+    "build": "vite build && vite build --outDir docs",
+    "postbuild": "node -e \"const fs = require('fs'); ['dist', 'docs'].forEach(d => { if (fs.existsSync(d)) { fs.copyFileSync(d + '/index.html', d + '/404.html'); fs.writeFileSync(d + '/.nojekyll', ''); } });\"",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist --dotfiles",
     "build:docs": "vite build --outDir docs && node -e \"const fs = require('fs'); if (fs.existsSync('docs')) { fs.copyFileSync('docs/index.html', 'docs/404.html'); fs.writeFileSync('docs/.nojekyll', ''); }\"",

@@ -3,10 +3,15 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-// Determine appropriate base URL for GitHub Pages or local preview
+// Determine appropriate base URL for GitHub Pages, docs folder, or local preview
 const getBaseUrl = (): string => {
-  if (process.env.BASE_URL) return process.env.BASE_URL;
-  if (process.env.VITE_BASE) return process.env.VITE_BASE;
+  let base = process.env.BASE_URL || process.env.VITE_BASE;
+  if (base) {
+    if (!base.endsWith('/') && !base.startsWith('.')) {
+      base = base + '/';
+    }
+    return base;
+  }
 
   if (process.env.GITHUB_REPOSITORY) {
     const parts = process.env.GITHUB_REPOSITORY.split('/');
