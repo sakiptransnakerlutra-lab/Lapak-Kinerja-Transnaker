@@ -1,0 +1,7 @@
+{
+  "name": "LAPAK KINERJA - Dinas Transnaker Luwu Utara",
+  "description": "Layanan Pemantauan dan Akses Data Dukung Evaluasi Akuntabilitas Kinerja Instansi Pemerintah (SAKIP) Dinas Transmigrasi dan Tenaga Kerja Kabupaten Luwu Utara",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
